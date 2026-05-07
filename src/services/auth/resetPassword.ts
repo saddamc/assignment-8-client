@@ -35,7 +35,7 @@ export const resetPassword = async (_currentState: any, formData: FormData): Pro
                 "Content-Type": "application/json",
                 Authorization: token,
             },
-            body: JSON.stringify({ id: userId, password: validation.data.password }),
+            body: JSON.stringify({ id: userId, password: validation.data!.password }),
         });
 
         const result = await res.json();

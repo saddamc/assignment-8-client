@@ -6,6 +6,14 @@ import ProductsClient from "./ProductsClient";
 interface Category {
   id: string;
   name: string;
+  slug: string;
+  _count?: { products: number };
+}
+
+interface Brand {
+  id: string;
+  name: string;
+  slug: string;
   _count?: { products: number };
 }
 
@@ -16,8 +24,11 @@ export default async function ProductsPage({
 }) {
   const params = await searchParams;
   const categoryId = params.categoryId || "";
+  const brandId = params.brandId || "";
   const minPrice = params.minPrice || "";
   const maxPrice = params.maxPrice || "";
+  const minRating = params.minRating || "";
+  const inStock = params.inStock || "";
   const sortBy = params.sortBy || "createdAt";
   const sortOrder = params.sortOrder || "desc";
   const searchTerm = params.searchTerm || "";
@@ -30,26 +41,33 @@ export default async function ProductsPage({
     `sortOrder=${sortOrder}`,
   ];
   if (categoryId) queryParts.push(`categoryId=${categoryId}`);
+  if (brandId) queryParts.push(`brandId=${brandId}`);
   if (minPrice) queryParts.push(`minPrice=${minPrice}`);
   if (maxPrice) queryParts.push(`maxPrice=${maxPrice}`);
+  if (minRating) queryParts.push(`minRating=${minRating}`);
+  if (inStock) queryParts.push(`inStock=${inStock}`);
   if (searchTerm) queryParts.push(`searchTerm=${encodeURIComponent(searchTerm)}`);
 
   let products: unknown[] = [];
   let total = 0;
   let categories: Category[] = [];
+  let brands: Brand[] = [];
 
   try {
-    const [productsRes, categoriesRes] = await Promise.all([
+    const [productsRes, categoriesRes, brandsRes] = await Promise.all([
       serverFetch.get(`/products?${queryParts.join("&")}`),
-      serverFetch.get("/products/categories"),
+      serverFetch.get("/products/categories?limit=100"),
+      serverFetch.get("/products/brands?limit=100"),
     ]);
     const productsData = await productsRes.json();
     const categoriesData = await categoriesRes.json();
+    const brandsData = await brandsRes.json();
     if (productsData.success) {
-      products = productsData.data.data || [];
-      total = productsData.data.meta?.total || 0;
+      products = productsData.data?.data || productsData.data || [];
+      total = productsData.meta?.total || productsData.data?.meta?.total || 0;
     }
     if (categoriesData.success) categories = categoriesData.data || [];
+    if (brandsData.success) brands = brandsData.data || [];
   } catch {
     console.error("Failed to fetch products");
   }
@@ -61,15 +79,16 @@ export default async function ProductsPage({
         {/* Header */}
         <div className="mb-10">
           <p className="text-xs font-bold text-zinc-400 uppercase tracking-widest mb-2">Shop</p>
-          <h1 className="text-4xl md:text-5xl font-serif font-bold tracking-tight">Essential Collection</h1>
-          <p className="text-zinc-500 mt-3 max-w-xl">Showing {total} products — meticulously sourced for the modern connoisseur.</p>
+          <h1 className="text-4xl md:text-5xl font-serif font-bold tracking-tight">All Products</h1>
+          <p className="text-zinc-500 mt-3 max-w-xl">{total} products available</p>
         </div>
         <ProductsClient
           initialProducts={products}
           categories={categories}
+          brands={brands}
           total={total}
           currentPage={parseInt(page)}
-          currentParams={{ categoryId, minPrice, maxPrice, sortBy, sortOrder, searchTerm }}
+          currentParams={{ categoryId, brandId, minPrice, maxPrice, minRating, inStock, sortBy, sortOrder, searchTerm }}
         />
       </main>
       <Footer />

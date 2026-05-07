@@ -16,7 +16,7 @@ export default function AdminRevenueChart({ data }: { data: any[] }) {
         <YAxis tick={{ fontSize: 12, fill: "#a1a1aa" }} axisLine={false} tickLine={false} tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`} />
         <Tooltip
           contentStyle={{ borderRadius: "12px", border: "1px solid #e4e4e7", boxShadow: "0 4px 20px rgba(0,0,0,0.05)", fontSize: "13px" }}
-          formatter={(value: number) => [`$${value.toLocaleString()}`, "Revenue"]}
+          formatter={(value) => [`$${Number(value ?? 0).toLocaleString()}`, "Revenue"]}
         />
         <Bar dataKey="revenue" fill="#4f46e5" radius={[6, 6, 0, 0]} />
       </BarChart>

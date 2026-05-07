@@ -1,6 +1,6 @@
 import React from 'react';
 import { Star, Minus, Plus, Heart, Share2, Truck, Shield, RotateCcw } from 'lucide-react';
-import Button from '@/components/ui/button';
+import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
 interface ProductImage {
@@ -213,16 +213,16 @@ const ProductDetail: React.FC<ProductDetailProps> = ({
               variant="outline"
               size="lg"
               className="flex-1"
-              icon={<Heart size={18} className={isWishlisted ? 'fill-current' : ''} />}
             >
+              <Heart size={18} className={`mr-2 ${isWishlisted ? 'fill-current' : ''}`} />
               Save
             </Button>
             <Button
               variant="outline"
               size="lg"
               className="flex-1"
-              icon={<Share2 size={18} />}
             >
+              <Share2 size={18} className="mr-2" />
               Share
             </Button>
           </div>

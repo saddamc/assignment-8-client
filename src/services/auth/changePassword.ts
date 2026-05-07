@@ -36,8 +36,8 @@ export const changePassword = async (_currentState: any, formData: FormData): Pr
                 Cookie: `accessToken=${accessToken}`,
             },
             body: JSON.stringify({
-                oldPassword: validation.data.oldPassword,
-                newPassword: validation.data.newPassword,
+                oldPassword: validation.data!.oldPassword,
+                newPassword: validation.data!.newPassword,
             }),
         });
 

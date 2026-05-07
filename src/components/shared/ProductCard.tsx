@@ -1,7 +1,7 @@
 import React from 'react';
 import { Star, Heart, ShoppingCart } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import Button from '@/components/ui/button';
+import { Button } from '@/components/ui/button';
 
 interface ProductCardProps {
   id: string;
@@ -120,8 +120,8 @@ const ProductCard: React.FC<ProductCardProps> = ({
           variant="default"
           size="sm"
           className="w-full mt-auto"
-          icon={<ShoppingCart size={16} />}
         >
+          <ShoppingCart size={16} className="mr-2" />
           Add to Cart
         </Button>
       </div>

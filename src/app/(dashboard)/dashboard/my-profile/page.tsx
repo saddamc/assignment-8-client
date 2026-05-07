@@ -72,10 +72,10 @@ export default async function ProfilePage() {
                 initialData={{
                   name: user.name || '',
                   email: user.email,
-                  contactNumber: user.contactNumber,
-                  address: user.address,
-                  bio: user.bio,
-                  profilePhoto: user.profilePhoto,
+                  contactNumber: user.contactNumber ?? undefined,
+                  address: user.address ?? undefined,
+                  bio: user.bio ?? undefined,
+                  profilePhoto: user.profilePhoto ?? undefined,
                 }}
               />
             )}
@@ -85,12 +85,12 @@ export default async function ProfilePage() {
                 initialData={{
                   name: user.name || '',
                   email: user.email,
-                  contactNumber: user.contactNumber,
-                  address: user.address,
-                  bio: user.bio,
-                  storeName: user.storeName,
-                  storeDescription: user.storeDescription,
-                  profilePhoto: user.profilePhoto,
+                  contactNumber: user.contactNumber ?? undefined,
+                  address: user.address ?? undefined,
+                  bio: user.bio ?? undefined,
+                  storeName: user.storeName ?? undefined,
+                  storeDescription: user.storeDescription ?? undefined,
+                  profilePhoto: user.profilePhoto ?? undefined,
                 }}
               />
             )}
@@ -100,9 +100,9 @@ export default async function ProfilePage() {
                 initialData={{
                   name: user.name || '',
                   email: user.email,
-                  contactNumber: user.contactNumber,
-                  bio: user.bio,
-                  profilePhoto: user.profilePhoto,
+                  contactNumber: user.contactNumber ?? undefined,
+                  bio: user.bio ?? undefined,
+                  profilePhoto: user.profilePhoto ?? undefined,
                 }}
               />
             )}

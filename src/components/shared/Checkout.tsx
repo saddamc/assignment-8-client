@@ -3,7 +3,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Lock, CreditCard, Truck } from 'lucide-react';
-import Button from '@/components/ui/button';
+import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 
@@ -296,13 +296,13 @@ const Checkout: React.FC<CheckoutProps> = ({ orderSummary, onSubmit, isLoading }
 
           <Button
             type="submit"
-            isLoading={isLoading}
+            disabled={isLoading}
             variant="default"
             size="lg"
             className="w-full"
-            icon={<Lock size={20} />}
           >
-            Complete Purchase
+            <Lock size={20} className="mr-2" />
+            {isLoading ? 'Processing...' : 'Complete Purchase'}
           </Button>
         </form>
       </div>

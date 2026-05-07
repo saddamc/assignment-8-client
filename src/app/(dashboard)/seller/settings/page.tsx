@@ -59,12 +59,12 @@ export default async function SellerSettingsPage() {
               initialData={{
                 name: user.name || '',
                 email: user.email,
-                storeName: user.storeName,
-                storeDescription: user.storeDescription,
-                contactNumber: user.contactNumber,
-                address: user.address,
-                bio: user.bio,
-                profilePhoto: user.profilePhoto,
+                storeName: user.storeName ?? undefined,
+                storeDescription: user.storeDescription ?? undefined,
+                contactNumber: user.contactNumber ?? undefined,
+                address: user.address ?? undefined,
+                bio: user.bio ?? undefined,
+                profilePhoto: user.profilePhoto ?? undefined,
               }}
             />
           </CardContent>

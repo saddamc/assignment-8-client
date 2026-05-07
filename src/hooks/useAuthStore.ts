@@ -10,6 +10,10 @@ export interface AuthUser {
   role: UserRole;
   profilePhoto?: string | null;
   storeName?: string | null;
+  storeDescription?: string | null;
+  contactNumber?: string | null;
+  address?: string | null;
+  bio?: string | null;
 }
 
 interface AuthState {

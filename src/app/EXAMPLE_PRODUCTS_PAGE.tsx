@@ -11,7 +11,7 @@ import { useState, useEffect } from 'react';
 import { Search, SlidersHorizontal } from 'lucide-react';
 import Section from '@/components/shared/Section';
 import ProductCard from '@/components/shared/ProductCard';
-import Button from '@/components/ui/button';
+import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import Navbar from '@/components/Home/Navbar';
 import Footer from '@/components/Home/Footer';
@@ -187,13 +187,16 @@ export default function ProductsPage() {
                 <label className="text-sm font-medium text-neutral-700 mb-2 block">
                   Search
                 </label>
-                <Input
-                  type="text"
-                  placeholder="Search products..."
-                  value={searchQuery}
-                  onChange={handleSearch}
-                  icon={<Search size={16} />}
-                />
+                <div className="relative">
+                  <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400" />
+                  <Input
+                    type="text"
+                    placeholder="Search products..."
+                    value={searchQuery}
+                    onChange={handleSearch}
+                    className="pl-9"
+                  />
+                </div>
               </div>
 
               {/* Categories */}

@@ -59,9 +59,9 @@ export default async function AdminSettingsPage() {
               initialData={{
                 name: user.name || '',
                 email: user.email,
-                contactNumber: user.contactNumber,
-                bio: user.bio,
-                profilePhoto: user.profilePhoto,
+                contactNumber: user.contactNumber ?? undefined,
+                bio: user.bio ?? undefined,
+                profilePhoto: user.profilePhoto ?? undefined,
               }}
             />
           </CardContent>

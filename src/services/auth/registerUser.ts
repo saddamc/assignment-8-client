@@ -38,10 +38,10 @@ export const registerUser = async (_currentState: any, formData: FormData): Prom
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-                name: validation.data.name,
-                email: validation.data.email,
-                password: validation.data.password,
-                role: validation.data.role || "CUSTOMER"
+                name: validation.data!.name,
+                email: validation.data!.email,
+                password: validation.data!.password,
+                role: validation.data!.role || "CUSTOMER"
             }),
         });
 
@@ -86,63 +86,3 @@ export const registerUser = async (_currentState: any, formData: FormData): Prom
 };
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
-export const registerUser = async (_currentState: any, formData: FormData): Promise<any> => {
-    try {
-        // 1. Extract basic fields from the form
-        const firstName = formData.get('firstName') as string;
-        const lastName = formData.get('lastName') as string;
-        const email = formData.get('email') as string;
-        const password = formData.get('password') as string;
-        const profileImage = formData.get('profileImage') as File; // Optional
-
-        // 2. Validate input on the server side
-        if (!firstName || !lastName || !email || !password) {
-            return { success: false, message: "All fields are required" };
-        }
-
-        // 3. Construct the JSON data object expected by the backend schema
-        const customerData = {
-            password: password,
-            customer: {
-                name: `${firstName} ${lastName}`,
-                email: email,
-                contactNumber: "0000000000" // Optional based on backend schema
-            }
-        };
-
-        // 4. Create the Multipart FormData payload for the backend
-        const backendFormData = new FormData();
-        // The backend expects the JSON object to be stringified inside a 'data' field!
-        backendFormData.append('data', JSON.stringify(customerData));
-        
-        // If a file was uploaded, append it to the 'file' field
-        if (profileImage && profileImage.size > 0) {
-            backendFormData.append('file', profileImage);
-        }
-
-        // 5. Send the request to your backend Node.js API
-        const apiUrl = process.env.NEXT_PUBLIC_BASE_API_URL || 'http://localhost:5000/api/v1';
-        
-        const response = await fetch(`${apiUrl}/user/create-customer`, {
-            method: 'POST',
-            body: backendFormData, 
-            // Note: When sending FormData, DO NOT set the 'Content-Type' header!
-            // fetch will automatically set it to 'multipart/form-data' with the correct boundary.
-        });
-
-        const data = await response.json();
-
-        if (!response.ok || !data.success) {
-            return { success: false, message: data.message || "Registration failed" };
-        }
-
-        // 6. Registration successful! Usually, we redirect to login
-        // If the backend returns a token upon registration, we can log them in immediately.
-        
-    } catch (error: any) {
-        return { success: false, message: "Something went wrong during registration." };
-    }
-
-    // Redirect after successful completion (outside try-catch to allow Next.js redirect to work)
-    redirect("/login?registered=true");
-};

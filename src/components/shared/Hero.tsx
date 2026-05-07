@@ -1,5 +1,5 @@
 import React from 'react';
-import Button from '@/components/ui/button';
+import { Button } from '@/components/ui/button';
 import { ArrowRight } from 'lucide-react';
 
 interface HeroProps {
@@ -51,10 +51,9 @@ const Hero: React.FC<HeroProps> = ({
               variant="default"
               size="lg"
               className="bg-white text-neutral-900 hover:bg-neutral-100"
-              icon={<ArrowRight size={20} />}
-              iconPosition="right"
             >
               {primaryCTA.text}
+              <ArrowRight size={20} className="ml-2" />
             </Button>
           )}
           

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Mail, Send } from 'lucide-react';
-import Button from '@/components/ui/button';
+import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 
 interface NewsletterProps {
@@ -59,12 +59,11 @@ const Newsletter: React.FC<NewsletterProps> = ({
           </div>
           <Button
             type="submit"
-            isLoading={isLoading}
+            disabled={isLoading}
             className="bg-white text-indigo-600 hover:bg-neutral-100 sm:w-auto"
-            icon={<Send size={18} />}
-            iconPosition="right"
           >
-            Subscribe
+            {isLoading ? 'Subscribing...' : 'Subscribe'}
+            <Send size={18} className="ml-2" />
           </Button>
         </form>
 

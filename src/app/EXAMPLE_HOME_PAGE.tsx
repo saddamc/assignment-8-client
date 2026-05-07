@@ -17,7 +17,7 @@ import Newsletter from '@/components/shared/Newsletter';
 import Navbar from '@/components/Home/Navbar';
 import Footer from '@/components/Home/Footer';
 import { Zap, Smartphone, Watch, Headphones, Keyboard, Battery } from 'lucide-react';
-import Button from '@/components/ui/button';
+import { Button } from '@/components/ui/button';
 
 // Mock data
 const FEATURED_PRODUCTS = [
@@ -218,7 +218,6 @@ export default function HomePage() {
 
         {/* ─── TOP DEALS ────────────────────────────────────────────── */}
         <Section
-          id="deals"
           title="Top Deals"
           subtitle="Unbeatable offers on premium products"
           headingAlignment="center"

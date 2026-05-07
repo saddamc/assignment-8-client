@@ -1,6 +1,6 @@
 import React from 'react';
 import { X, Minus, Plus, AlertCircle } from 'lucide-react';
-import Button from '@/components/ui/button';
+import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
 interface CartItem {
@@ -161,12 +161,12 @@ const Cart: React.FC<CartProps> = ({
 
           <Button
             onClick={onCheckout}
-            isLoading={isLoading}
+            disabled={isLoading}
             variant="default"
             size="lg"
             className="w-full"
           >
-            Proceed to Checkout
+            {isLoading ? 'Loading...' : 'Proceed to Checkout'}
           </Button>
 
           <p className="text-xs text-neutral-600 text-center mt-4">

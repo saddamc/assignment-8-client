@@ -15,7 +15,7 @@ import DashboardSidebar from '@/components/shared/DashboardSidebar';
 import { DashboardStats } from '@/components/shared/DashboardStats';
 import { OrdersTable, ProductsTable } from '@/components/shared/DashboardTables';
 import Section from '@/components/shared/Section';
-import Button from '@/components/ui/button';
+import { Button } from '@/components/ui/button';
 import { Plus, MoreVertical } from 'lucide-react';
 
 // Mock data
@@ -133,7 +133,7 @@ export default function SellerDashboard() {
                 <h1 className="text-3xl font-bold text-neutral-900">Seller Dashboard</h1>
                 <p className="text-neutral-600 mt-1">Welcome back! Here's your performance.</p>
               </div>
-              <Button icon={<Plus size={18} />}>Add Product</Button>
+              <Button><Plus size={18} className="mr-2" />Add Product</Button>
             </div>
           </div>
         </div>
@@ -228,7 +228,7 @@ export default function SellerDashboard() {
             <section className="bg-white rounded-xl border border-neutral-200 p-6">
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-2xl font-bold text-neutral-900">Product Inventory</h2>
-                <Button icon={<Plus size={18} />}>Add New Product</Button>
+                <Button><Plus size={18} className="mr-2" />Add New Product</Button>
               </div>
               <ProductsTable
                 products={MOCK_PRODUCTS}
