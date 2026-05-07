@@ -24,7 +24,7 @@ export default function RegisterPage() {
         <div className="text-center">
           <div className="flex items-center justify-center gap-2 mb-4">
             <Image src="/logo.png" alt="Cabro" width={40} height={40} className="h-10 w-10 object-contain rounded-full" />
-            <Image src="/name.jpeg" alt="Cabro" width={100} height={32} className="h-8 w-auto object-contain" />
+            <h1 className="text-[#FF6600] font-bold text-2xl">ABRO</h1>
           </div>
           <h2 className="text-3xl font-bold tracking-tight">Create an account</h2>
           <p className="text-sm text-muted-foreground mt-2">
@@ -77,18 +77,7 @@ export default function RegisterPage() {
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="role">Account Type</Label>
-            <select
-              id="role"
-              name="role"
-              defaultValue="CUSTOMER"
-              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-            >
-              <option value="CUSTOMER">Customer</option>
-              <option value="SELLER">Seller</option>
-            </select>
-          </div>
+          <input type="hidden" name="role" value="CUSTOMER" />
 
           {state && !state.success && state.message && (
             <p className="text-sm text-red-600 rounded-lg bg-red-50 border border-red-200 p-3">
@@ -104,6 +93,22 @@ export default function RegisterPage() {
             Already have an account?{" "}
             <Link href="/login" className="font-semibold text-primary hover:underline">
               Sign in
+            </Link>
+          </p>
+
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-white px-2 text-muted-foreground">or</span>
+            </div>
+          </div>
+
+          <p className="text-center text-sm text-muted-foreground">
+            Want to sell on Cabro?{" "}
+            <Link href="/register-seller" className="font-semibold text-[#FF6600] hover:underline">
+              Open a seller account →
             </Link>
           </p>
         </form>

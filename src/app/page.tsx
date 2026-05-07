@@ -1,4 +1,4 @@
-import { ArrowRight, ArrowUpRight, PlayCircle, ShieldCheck, Leaf, Truck, Star, Zap, ChevronRight } from "lucide-react";
+import { Star, ChevronRight, Zap, Shield, Truck, RotateCcw } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { serverFetch } from "@/lib/server-fetch";
@@ -7,7 +7,7 @@ import Navbar from "@/components/Home/Navbar";
 
 async function getFeaturedProducts() {
   try {
-    const res = await serverFetch.get("/products?limit=6&sortBy=createdAt&sortOrder=desc");
+    const res = await serverFetch.get("/products?limit=8&sortBy=createdAt&sortOrder=desc");
     const data = await res.json();
     if (data.success) return data.data.data || [];
   } catch {}
@@ -23,531 +23,379 @@ async function getCategories() {
   return [];
 }
 
-const TESTIMONIALS = [
+const HERO_BANNERS = [
   {
-    name: "Alexander S.",
-    role: "Verified Collector",
-    text: "The attention to detail is unparalleled. Cabro is truly a cut above — every product exceeded my expectations.",
-    avatar: "AS",
-    rating: 5,
+    title: "Big Spring Sale",
+    subtitle: "Save big on top electronics, fashion & more",
+    cta: "Shop the Sale",
+    href: "/products?sale=true",
+    bg: "linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)",
+    accent: "#e94560",
+    badge: "Up to 60% off",
   },
   {
-    name: "Janessa Parling",
-    role: "Premium Member",
-    text: "Finally, a platform that pairs luxury with trust. Delivery was pristine and my purchases exceeded all expectations.",
-    avatar: "JP",
-    rating: 5,
+    title: "New Arrivals",
+    subtitle: "Fresh drops across all categories every week",
+    cta: "See What's New",
+    href: "/new-arrivals",
+    bg: "linear-gradient(135deg, #0a3d0a 0%, #1a5e1a 50%, #0d4a1f 100%)",
+    accent: "#FF9900",
+    badge: "Just Landed",
   },
   {
-    name: "Diana Hasor",
-    role: "Elite Collector",
-    text: "Cabro sets the gold standard. A platform that combines luxury shopping with an experience second to none.",
-    avatar: "DH",
-    rating: 5,
+    title: "Top Rated Sellers",
+    subtitle: "Shop from our highest-rated marketplace sellers",
+    cta: "Browse Sellers",
+    href: "/products?sort=popular",
+    bg: "linear-gradient(135deg, #2c1810 0%, #4a2c1a 50%, #3d2010 100%)",
+    accent: "#FF9900",
+    badge: "Best Sellers",
   },
 ];
 
-const MARQUEE_ITEMS = [
-  "Free Shipping Worldwide",
-  "Authenticated Products",
-  "30-Day Returns",
-  "Exclusive Collections",
-  "Member Rewards",
-  "24/7 Concierge",
+const CATEGORY_CARDS = [
+  { name: "Electronics", icon: "🔌", href: "/products?cat=electronics", color: "#fff9f0" },
+  { name: "Fashion", icon: "👗", href: "/products?cat=fashion", color: "#f0f7ff" },
+  { name: "Home & Living", icon: "🏠", href: "/products?cat=home", color: "#f0fff4" },
+  { name: "Sports", icon: "⚽", href: "/products?cat=sports", color: "#fff0f0" },
+  { name: "Beauty", icon: "💄", href: "/products?cat=beauty", color: "#fdf0ff" },
+  { name: "Books", icon: "📚", href: "/products?cat=books", color: "#fffbf0" },
+  { name: "Toys", icon: "🧸", href: "/products?cat=toys", color: "#f0faff" },
+  { name: "Automotive", icon: "🚗", href: "/products?cat=auto", color: "#f5f5f5" },
 ];
+
+const TRUST_ITEMS = [
+  { icon: <Truck size={20} color="#FF9900" />, title: "FREE Delivery", desc: "On orders over $25" },
+  { icon: <RotateCcw size={20} color="#FF9900" />, title: "Easy Returns", desc: "30-day return window" },
+  { icon: <Shield size={20} color="#FF9900" />, title: "Secure Payments", desc: "100% buyer protection" },
+  { icon: <Zap size={20} color="#FF9900" />, title: "Same Day Dispatch", desc: "Order before 2 PM" },
+];
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function ProductCard({ product, index }: { product: any; index: number }) {
+  const avg = product.reviews?.length
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    ? product.reviews.reduce((a: number, r: any) => a + r.rating, 0) / product.reviews.length
+    : null;
+  const discountedPrice = product.discount ? product.price * (1 - product.discount / 100) : null;
+
+  return (
+    <Link href={`/products/${product.id}`} style={{ textDecoration: "none", color: "inherit" }}>
+      <div className="hz-prod-card" style={{
+        background: "#fff", borderRadius: 8, overflow: "hidden",
+        border: "1px solid #ddd", transition: "box-shadow 0.2s",
+        height: "100%",
+      }}>
+        {/* Image */}
+        <div style={{ aspectRatio: "1/1", background: "#f5f5f5", position: "relative", overflow: "hidden" }}>
+          {index < 2 && (
+            <div style={{ position: "absolute", top: 10, left: 10, zIndex: 1, background: "#CC0C39", color: "#fff", fontSize: 11, fontWeight: 700, padding: "3px 8px", borderRadius: 3 }}>
+              {index === 0 ? "Best Seller" : "New"}
+            </div>
+          )}
+          {product.discount && (
+            <div style={{ position: "absolute", top: index < 2 ? 34 : 10, left: 10, zIndex: 1, background: "#FF9900", color: "#111", fontSize: 11, fontWeight: 700, padding: "3px 8px", borderRadius: 3 }}>
+              -{product.discount}%
+            </div>
+          )}
+          {product.images?.[0] ? (
+            <Image src={product.images[0]} alt={product.name} fill style={{ objectFit: "contain", padding: "8px" }} />
+          ) : (
+            <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", color: "#bbb", fontSize: 13, textAlign: "center", padding: 12 }}>
+              {product.name}
+            </div>
+          )}
+        </div>
+
+        {/* Info */}
+        <div style={{ padding: "12px" }}>
+          <p style={{ fontSize: 13, color: "#111", lineHeight: 1.4, marginBottom: 6, overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" as const }}>
+            {product.name}
+          </p>
+
+          {/* Stars */}
+          {avg && (
+            <div style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 4 }}>
+              {[1, 2, 3, 4, 5].map((s) => (
+                <Star key={s} size={12} style={{ fill: s <= Math.round(avg) ? "#FF9900" : "#ddd", color: s <= Math.round(avg) ? "#FF9900" : "#ddd" }} />
+              ))}
+              <span style={{ fontSize: 11, color: "#007185" }}>({product.reviews?.length || 0})</span>
+            </div>
+          )}
+
+          {/* Price */}
+          <div style={{ display: "flex", alignItems: "baseline", gap: 6, flexWrap: "wrap" }}>
+            {discountedPrice ? (
+              <>
+                <span style={{ fontSize: 18, fontWeight: 700, color: "#CC0C39" }}>
+                  <sup style={{ fontSize: 11 }}>$</sup>{discountedPrice.toFixed(2)}
+                </span>
+                <span style={{ fontSize: 12, color: "#666", textDecoration: "line-through" }}>${product.price.toFixed(2)}</span>
+              </>
+            ) : (
+              <span style={{ fontSize: 18, fontWeight: 700, color: "#111" }}>
+                <sup style={{ fontSize: 11 }}>$</sup>{product.price.toFixed(2)}
+              </span>
+            )}
+          </div>
+
+          <p style={{ fontSize: 12, color: "#007600", fontWeight: 500, marginTop: 4 }}>
+            {product.stock > 0 ? `In Stock` : "Out of Stock"}
+          </p>
+
+          <p style={{ fontSize: 11, color: "#555", marginTop: 2 }}>
+            FREE delivery <span style={{ fontWeight: 700 }}>Tomorrow</span>
+          </p>
+        </div>
+      </div>
+    </Link>
+  );
+}
 
 export default async function Home() {
-  const [featuredProducts] = await Promise.all([
+  const [featuredProducts, categories] = await Promise.all([
     getFeaturedProducts(),
     getCategories(),
   ]);
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const displayCats = categories.length > 0 ? categories.slice(0, 8).map((c: any) => ({ name: c.name, icon: "📦", href: `/products?cat=${c.id}`, color: "#fff9f0" })) : CATEGORY_CARDS;
+
   return (
     <>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700;1,900&family=DM+Sans:wght@300;400;500;600;700&display=swap');
-
-        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-        .lx-root { font-family: 'DM Sans', sans-serif; background: #050505; }
-        .lx-display { font-family: 'Playfair Display', Georgia, serif; }
-
-        /* ── Marquee ── */
-        @keyframes lx-marquee {
-          from { transform: translateX(0); }
-          to   { transform: translateX(-50%); }
+        * { box-sizing: border-box; }
+        body { margin: 0; background: #eaeded; }
+        .hz-root { font-family: Arial, sans-serif; background: #eaeded; }
+        .hz-section-card { background: #fff; border-radius: 8px; overflow: hidden; }
+        .hz-add-cart-btn {
+          width: 100%; padding: 9px 0;
+          background: #FF9900;
+          border: 1px solid #FF8C00;
+          border-radius: 24px;
+          font-size: 13px; font-weight: 600;
+          color: #111; cursor: pointer; margin-top: 8px;
+          transition: background 0.12s;
         }
-        .lx-marquee { animation: lx-marquee 22s linear infinite; display: flex; white-space: nowrap; }
-        .lx-marquee:hover { animation-play-state: paused; }
-
-        /* ── Entrance animations ── */
-        @keyframes lx-up {
-          from { opacity: 0; transform: translateY(28px); }
-          to   { opacity: 1; transform: translateY(0); }
+        .hz-add-cart-btn:hover { background: #e68a00; }
+        .hz-section-title {
+          font-size: 21px; font-weight: 700; color: #111;
+          margin: 0 0 16px; padding: 0;
         }
-        .lx-a1 { animation: lx-up 0.9s cubic-bezier(.16,1,.3,1) 0.05s both; }
-        .lx-a2 { animation: lx-up 0.9s cubic-bezier(.16,1,.3,1) 0.2s  both; }
-        .lx-a3 { animation: lx-up 0.9s cubic-bezier(.16,1,.3,1) 0.35s both; }
-        .lx-a4 { animation: lx-up 0.9s cubic-bezier(.16,1,.3,1) 0.5s  both; }
-        .lx-a5 { animation: lx-up 0.9s cubic-bezier(.16,1,.3,1) 0.65s both; }
-
-        /* ── Gradient headline ── */
-        @keyframes lx-grad {
-          0%,100% { background-position: 0% 50%; }
-          50%      { background-position: 100% 50%; }
+        .hz-see-more {
+          font-size: 13px; color: #007185;
+          text-decoration: none; font-weight: 400;
+          display: inline-block; margin-top: 8px;
         }
-        .lx-grad-text {
-          background: linear-gradient(120deg, #e8e8ec 0%, #9090a0 35%, #e8e8ec 65%, #c8c8d4 100%);
-          background-size: 250% auto;
-          -webkit-background-clip: text; background-clip: text;
-          -webkit-text-fill-color: transparent;
-          animation: lx-grad 5s ease infinite;
+        .hz-see-more:hover { color: #c7511f; text-decoration: underline; }
+        .hz-cat-card {
+          background: #fff; border-radius: 8px; padding: 16px;
+          text-align: center; text-decoration: none; color: #111;
+          border: 1px solid #ddd; transition: box-shadow 0.15s;
+          display: flex; flex-direction: column; align-items: center; gap: 8px;
         }
-
-        /* ── Grid noise texture ── */
-        .lx-grid-bg {
-          background-image:
-            linear-gradient(rgba(255,255,255,.018) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(255,255,255,.018) 1px, transparent 1px);
-          background-size: 72px 72px;
-        }
-
-        /* ── Card hover lift ── */
-        .lx-card { transition: transform .4s cubic-bezier(.16,1,.3,1), box-shadow .4s ease; }
-        .lx-card:hover { transform: translateY(-5px); box-shadow: 0 24px 64px rgba(0,0,0,.5); }
-
-        /* ── Philosophy card hover ── */
-        .lx-phil { transition: transform .3s ease, box-shadow .3s ease; }
-        .lx-phil:hover { transform: translateY(-4px); box-shadow: 0 20px 60px rgba(0,0,0,.08); }
-
-        /* ── Product card image zoom ── */
-        .lx-prod-img { transition: transform .7s cubic-bezier(.16,1,.3,1); }
-        .lx-prod:hover .lx-prod-img { transform: scale(1.07); }
-        .lx-prod-cta {
-          opacity: 0; transform: translateY(6px);
-          transition: opacity .3s ease, transform .3s ease;
-        }
-        .lx-prod:hover .lx-prod-cta { opacity: 1; transform: translateY(0); }
-
-        /* ── Testimonial card ── */
-        .lx-test {
-          background: linear-gradient(135deg, rgba(255,255,255,.03), rgba(255,255,255,.06));
-          border: 1px solid rgba(255,255,255,.07);
-          transition: border-color .3s ease;
-        }
-        .lx-test:hover { border-color: rgba(255,255,255,.16); }
-
-        /* ── Pill button ── */
-        .lx-pill-outline {
-          border: 1px solid rgba(255,255,255,.14);
-          transition: border-color .2s, background .2s;
-        }
-        .lx-pill-outline:hover { border-color: rgba(255,255,255,.35); background: rgba(255,255,255,.06); }
-
-        /* ── Label ── */
-        .lx-label {
-          font-size: 11px; font-weight: 600;
-          letter-spacing: .14em; text-transform: uppercase; color: #86868b;
-        }
+        .hz-cat-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.12); }
+        .hz-prod-card:hover { box-shadow: 0 4px 20px rgba(0,0,0,0.15); }
+        .hz-hero-cta:hover { background: #e68a00 !important; }
+        .hz-deal-tile:hover { opacity: 0.85; }
       `}</style>
 
-      <div className="lx-root" style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+      <div className="hz-root">
         <Navbar />
 
-        <main style={{ flex: 1 }}>
+        <main style={{ maxWidth: 1400, margin: "0 auto", padding: "16px" }}>
 
-          {/* ── TICKER ──────────────────────────────────────────── */}
-          <div style={{ background: '#111', borderBottom: '1px solid rgba(255,255,255,.05)', padding: '12px 0', overflow: 'hidden' }}>
-            <div className="lx-marquee">
-              {[...MARQUEE_ITEMS, ...MARQUEE_ITEMS].map((item, i) => (
-                <span key={i} style={{
-                  display: 'inline-flex', alignItems: 'center', gap: '20px',
-                  padding: '0 28px', fontSize: '11px', fontWeight: 600,
-                  letterSpacing: '.12em', textTransform: 'uppercase', color: '#52525b',
-                }}>
-                  {item}
-                  <span style={{ width: '3px', height: '3px', borderRadius: '50%', background: '#3f3f46', display: 'inline-block' }} />
+          {/* ── HERO BANNER ──────────────────────────────────── */}
+          <div style={{ borderRadius: 8, overflow: "hidden", marginBottom: 16, position: "relative" }}
+            className="hz-section-card"
+          >
+            <div style={{ background: HERO_BANNERS[0].bg, padding: "48px 60px", minHeight: 340, display: "flex", alignItems: "center" }}>
+              <div>
+                <span style={{ display: "inline-block", background: HERO_BANNERS[0].accent, color: "#fff", fontSize: 12, fontWeight: 700, padding: "4px 12px", borderRadius: 3, marginBottom: 16, letterSpacing: ".04em" }}>
+                  {HERO_BANNERS[0].badge}
                 </span>
+                <h1 style={{ fontSize: "clamp(32px, 5vw, 56px)", fontWeight: 800, color: "#fff", marginBottom: 12, lineHeight: 1.1 }}>
+                  {HERO_BANNERS[0].title}
+                </h1>
+                <p style={{ fontSize: 18, color: "#ccc", marginBottom: 28, maxWidth: 480 }}>
+                  {HERO_BANNERS[0].subtitle}
+                </p>
+                <Link href={HERO_BANNERS[0].href} className="hz-hero-cta" style={{
+                  display: "inline-flex", alignItems: "center", gap: 8,
+                  background: "#FF9900", color: "#111",
+                  padding: "12px 32px", borderRadius: 24,
+                  fontSize: 15, fontWeight: 700, textDecoration: "none",
+                  transition: "background 0.12s",
+                }}>
+                  {HERO_BANNERS[0].cta} <ChevronRight size={16} />
+                </Link>
+              </div>
+            </div>
+          </div>
+
+          {/* ── TRUST BAR ────────────────────────────────────── */}
+          <div className="hz-section-card" style={{ padding: "20px 32px", marginBottom: 16 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16 }}>
+              {TRUST_ITEMS.map((item) => (
+                <div key={item.title} style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                  {item.icon}
+                  <div>
+                    <p style={{ fontSize: 14, fontWeight: 700, color: "#111", margin: 0 }}>{item.title}</p>
+                    <p style={{ fontSize: 12, color: "#666", margin: 0 }}>{item.desc}</p>
+                  </div>
+                </div>
               ))}
             </div>
           </div>
 
-          {/* ── HERO ────────────────────────────────────────────── */}
-          <section style={{ position: 'relative', background: '#050505', overflow: 'hidden', minHeight: '100vh', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-
-            {/* Grid bg */}
-            <div className="lx-grid-bg" style={{ position: 'absolute', inset: 0, zIndex: 0 }} />
-
-            {/* Glow blobs */}
-            <div style={{ position: 'absolute', top: '15%', left: '50%', transform: 'translate(-50%,-50%)', width: 900, height: 900, background: 'radial-gradient(ellipse, rgba(99,102,241,.1) 0%, transparent 68%)', filter: 'blur(40px)', zIndex: 0, pointerEvents: 'none' }} />
-            <div style={{ position: 'absolute', bottom: '-10%', right: '-5%', width: 600, height: 600, background: 'radial-gradient(ellipse, rgba(139,92,246,.07) 0%, transparent 68%)', filter: 'blur(60px)', zIndex: 0, pointerEvents: 'none' }} />
-
-            {/* Bottom fade */}
-            <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 100, background: 'linear-gradient(transparent, #050505)', zIndex: 2 }} />
-
-            <div style={{ position: 'relative', zIndex: 1, maxWidth: 1200, margin: '0 auto', padding: '120px 48px', width: '100%' }}>
-
-              {/* Eyebrow */}
-              <div className="lx-a1" style={{ display: 'flex', justifyContent: 'center', marginBottom: 32 }}>
-                <div style={{
-                  display: 'inline-flex', alignItems: 'center', gap: 10,
-                  padding: '8px 20px', borderRadius: 100,
-                  background: 'rgba(255,255,255,.04)',
-                  border: '1px solid rgba(255,255,255,.1)',
-                  backdropFilter: 'blur(20px)',
-                }}>
-                  <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#34d399', display: 'inline-block', boxShadow: '0 0 8px #34d399' }} />
-                  <span className="lx-label" style={{ color: '#a1a1aa' }}>New Collection — Spring 2025</span>
+          {/* ── 3-COLUMN PROMO STRIP ─────────────────────────── */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16, marginBottom: 16 }}>
+            {HERO_BANNERS.slice(1).concat(HERO_BANNERS[0]).map((b, i) => (
+              <Link key={i} href={b.href} style={{ borderRadius: 8, overflow: "hidden", textDecoration: "none", display: "block" }}>
+                <div style={{ background: b.bg, padding: "28px 24px", minHeight: 160, position: "relative" }}>
+                  <span style={{ display: "inline-block", background: b.accent, color: "#fff", fontSize: 10, fontWeight: 700, padding: "3px 10px", borderRadius: 3, marginBottom: 10, letterSpacing: ".06em" }}>
+                    {b.badge}
+                  </span>
+                  <h3 style={{ fontSize: 18, fontWeight: 700, color: "#fff", marginBottom: 6, lineHeight: 1.2 }}>{b.title}</h3>
+                  <p style={{ fontSize: 12, color: "#aaa", marginBottom: 16 }}>{b.subtitle}</p>
+                  <span style={{ fontSize: 13, color: b.accent, fontWeight: 600, display: "inline-flex", alignItems: "center", gap: 4 }}>
+                    {b.cta} <ChevronRight size={13} />
+                  </span>
                 </div>
-              </div>
+              </Link>
+            ))}
+          </div>
 
-              {/* Headline */}
-              <div className="lx-a2" style={{ textAlign: 'center', marginBottom: 24 }}>
-                <h1 className="lx-display" style={{
-                  fontSize: 'clamp(56px, 11vw, 148px)',
-                  fontWeight: 900, lineHeight: .9,
-                  letterSpacing: '-0.03em', color: '#f5f5f7',
-                }}>
-                  Crafted for
-                </h1>
-                <h1 className="lx-display lx-grad-text" style={{
-                  fontSize: 'clamp(56px, 11vw, 148px)',
-                  fontWeight: 900, lineHeight: .9,
-                  letterSpacing: '-0.03em', fontStyle: 'italic',
-                }}>
-                  the Bold.
-                </h1>
-              </div>
-
-              {/* Sub */}
-              <div className="lx-a3" style={{ textAlign: 'center', marginBottom: 44 }}>
-                <p style={{ fontSize: 'clamp(16px, 1.8vw, 20px)', color: '#6e6e73', maxWidth: 500, margin: '0 auto', lineHeight: 1.65, fontWeight: 300 }}>
-                  Products at the intersection of art and function. No compromises. No exceptions.
-                </p>
-              </div>
-
-              {/* CTA row */}
-              <div className="lx-a4" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 14, marginBottom: 72, flexWrap: 'wrap' }}>
-                <Link href="/products" style={{
-                  display: 'inline-flex', alignItems: 'center', gap: 8,
-                  height: 52, padding: '0 32px', borderRadius: 100,
-                  background: '#f5f5f7', color: '#050505',
-                  fontSize: 15, fontWeight: 700, textDecoration: 'none',
-                  boxShadow: '0 0 40px rgba(245,245,247,.12)',
-                  transition: 'background .2s, box-shadow .2s',
-                }}>
-                  Shop Now <ArrowRight size={15} />
+          {/* ── CATEGORIES GRID ──────────────────────────────── */}
+          <div className="hz-section-card" style={{ padding: "24px", marginBottom: 16 }}>
+            <h2 className="hz-section-title">Shop by Category</h2>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(8, 1fr)", gap: 12 }}>
+              {displayCats.map((cat: { name: string; icon: string; href: string; color: string }) => (
+                <Link key={cat.name} href={cat.href} className="hz-cat-card">
+                  <div style={{ fontSize: 28, lineHeight: 1 }}>{cat.icon}</div>
+                  <span style={{ fontSize: 12, fontWeight: 600, color: "#111", textAlign: "center", lineHeight: 1.3 }}>{cat.name}</span>
                 </Link>
-                <button className="lx-pill-outline" style={{
-                  display: 'inline-flex', alignItems: 'center', gap: 8,
-                  height: 52, padding: '0 28px', borderRadius: 100,
-                  background: 'transparent', color: '#f5f5f7',
-                  fontSize: 15, fontWeight: 500, cursor: 'pointer',
-                }}>
-                  <PlayCircle size={18} style={{ color: '#52525b' }} />
-                  Watch the Story
-                </button>
-              </div>
+              ))}
+            </div>
+          </div>
 
-              {/* Stats bar */}
-              <div className="lx-a5" style={{ maxWidth: 600, margin: '0 auto' }}>
-                <div style={{
-                  display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)',
-                  background: 'rgba(255,255,255,.03)',
-                  border: '1px solid rgba(255,255,255,.07)',
-                  borderRadius: 20, overflow: 'hidden',
-                }}>
-                  {[
-                    { num: '50K+', label: 'Happy Clients' },
-                    { num: '4.9 ★', label: 'Avg Rating' },
-                    { num: '120+', label: 'Brand Partners' },
-                  ].map((s, i) => (
-                    <div key={i} style={{
-                      padding: '28px 16px', textAlign: 'center',
-                      borderRight: i < 2 ? '1px solid rgba(255,255,255,.06)' : 'none',
-                    }}>
-                      <p className="lx-display" style={{ fontSize: 34, fontWeight: 900, color: '#f5f5f7', marginBottom: 4, letterSpacing: '-0.03em' }}>{s.num}</p>
-                      <p className="lx-label">{s.label}</p>
+          {/* ── FEATURED PRODUCTS ────────────────────────────── */}
+          <div className="hz-section-card" style={{ padding: "24px", marginBottom: 16 }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
+              <h2 className="hz-section-title" style={{ margin: 0 }}>Featured Products</h2>
+              <Link href="/products" className="hz-see-more">See all results →</Link>
+            </div>
+
+            {featuredProducts.length > 0 ? (
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16 }}>
+                {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                {featuredProducts.slice(0, 8).map((product: any, idx: number) => (
+                  <ProductCard key={product.id} product={product} index={idx} />
+                ))}
+              </div>
+            ) : (
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16 }}>
+                {[...Array(8)].map((_, i) => (
+                  <div key={i} style={{ background: "#fff", borderRadius: 8, border: "1px solid #eee", overflow: "hidden" }}>
+                    <div style={{ aspectRatio: "1/1", background: "#f5f5f5" }} />
+                    <div style={{ padding: "12px" }}>
+                      <div style={{ height: 12, background: "#eee", borderRadius: 4, marginBottom: 8, width: "80%" }} />
+                      <div style={{ height: 10, background: "#eee", borderRadius: 4, width: "55%" }} />
                     </div>
-                  ))}
-                </div>
+                  </div>
+                ))}
               </div>
+            )}
+          </div>
 
+          {/* ── DEAL OF THE DAY ──────────────────────────────── */}
+          <div className="hz-section-card" style={{ padding: "24px", marginBottom: 16 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 20 }}>
+              <h2 className="hz-section-title" style={{ margin: 0 }}>Deal of the Day</h2>
+              <span style={{ background: "#CC0C39", color: "#fff", fontSize: 12, fontWeight: 700, padding: "4px 12px", borderRadius: 3 }}>
+                LIMITED TIME OFFERS
+              </span>
+              <Link href="/products?sale=true" className="hz-see-more" style={{ marginLeft: "auto" }}>See all deals →</Link>
             </div>
-          </section>
 
-          {/* ── CATEGORY GRID (Nike-scale editorial) ────────────── */}
-          <section style={{ background: '#050505', padding: '0 0 120px' }}>
-            <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 48px' }}>
-
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 48 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+              {/* Big deal card */}
+              <div style={{ background: "linear-gradient(135deg, #1a1a2e, #16213e)", borderRadius: 8, padding: "32px", display: "flex", flexDirection: "column", justifyContent: "space-between", minHeight: 240 }}>
                 <div>
-                  <p className="lx-label" style={{ marginBottom: 12 }}>Collections</p>
-                  <h2 className="lx-display" style={{ fontSize: 'clamp(28px, 4vw, 52px)', fontWeight: 700, color: '#f5f5f7', letterSpacing: '-0.03em', lineHeight: 1 }}>Shop the Edit</h2>
+                  <span style={{ background: "#CC0C39", color: "#fff", fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 3, display: "inline-block", marginBottom: 14 }}>DEAL OF THE DAY</span>
+                  <h3 style={{ fontSize: 22, fontWeight: 700, color: "#fff", marginBottom: 8 }}>Electronics Flash Sale</h3>
+                  <p style={{ fontSize: 14, color: "#aaa", marginBottom: 20 }}>Premium electronics at unbeatable prices. Don&rsquo;t miss out!</p>
+                  <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
+                    <span style={{ fontSize: 32, fontWeight: 800, color: "#FF9900" }}>Up to 60%</span>
+                    <span style={{ fontSize: 14, color: "#aaa" }}>off selected items</span>
+                  </div>
                 </div>
-                <Link href="/collections" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, color: '#52525b', fontSize: 14, fontWeight: 500, textDecoration: 'none' }}>
-                  All Collections <ArrowUpRight size={14} />
+                <Link href="/products?sale=true&cat=electronics" style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "#FF9900", color: "#111", padding: "11px 24px", borderRadius: 24, fontSize: 14, fontWeight: 700, textDecoration: "none", width: "fit-content" }}>
+                  Shop Electronics <ChevronRight size={14} />
                 </Link>
               </div>
 
-              {/* Asymmetric 3-col grid */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gridTemplateRows: 'auto auto', gap: 16 }}>
-
-                {/* Main hero card */}
-                <div className="lx-card" style={{
-                  gridColumn: '1 / 3', gridRow: '1 / 2',
-                  borderRadius: 22, overflow: 'hidden', minHeight: 400,
-                  background: 'linear-gradient(135deg, #0a0a18 0%, #141430 100%)',
-                  border: '1px solid rgba(255,255,255,.06)',
-                  position: 'relative', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', padding: 40,
-                }}>
-                  <div style={{ position: 'absolute', top: -80, right: -80, width: 500, height: 500, background: 'radial-gradient(ellipse, rgba(99,102,241,.18) 0%, transparent 65%)', pointerEvents: 'none' }} />
-                  <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,.75) 0%, transparent 55%)', zIndex: 0 }} />
-                  <div style={{ position: 'relative', zIndex: 1 }}>
-                    <span style={{
-                      display: 'inline-block', padding: '4px 14px',
-                      background: 'rgba(99,102,241,.18)', border: '1px solid rgba(99,102,241,.4)',
-                      borderRadius: 100, fontSize: '10px', fontWeight: 700, letterSpacing: '.1em',
-                      color: '#a5b4fc', marginBottom: 18, textTransform: 'uppercase',
-                    }}>Featured Drop</span>
-                    <h3 className="lx-display" style={{ fontSize: 40, fontWeight: 800, color: '#f5f5f7', letterSpacing: '-0.03em', lineHeight: 1, marginBottom: 12 }}>Avant-Garde<br />Tech</h3>
-                    <p style={{ color: '#6e6e73', fontSize: 15, marginBottom: 24, maxWidth: 340 }}>Sculptural electronics that blur the line between art and engineering.</p>
-                    <Link href="/collections" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, color: '#f5f5f7', fontSize: 13, fontWeight: 700, textDecoration: 'none', letterSpacing: '.06em', textTransform: 'uppercase' }}>
-                      Explore <ChevronRight size={13} />
-                    </Link>
-                  </div>
-                </div>
-
-                {/* Side card */}
-                <div className="lx-card" style={{
-                  gridColumn: '3 / 4', gridRow: '1 / 2',
-                  borderRadius: 22, overflow: 'hidden', minHeight: 400,
-                  background: 'linear-gradient(135deg, #0f0f0a 0%, #1a1608 100%)',
-                  border: '1px solid rgba(255,255,255,.06)',
-                  position: 'relative', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', padding: 32,
-                }}>
-                  <div style={{ position: 'absolute', top: 0, right: 0, width: 280, height: 280, background: 'radial-gradient(ellipse, rgba(251,191,36,.1) 0%, transparent 65%)', pointerEvents: 'none' }} />
-                  <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,.85) 0%, transparent 50%)', zIndex: 0 }} />
-                  <div style={{ position: 'relative', zIndex: 1 }}>
-                    <h3 className="lx-display" style={{ fontSize: 26, fontWeight: 700, color: '#f5f5f7', lineHeight: 1.1, marginBottom: 8 }}>Quiet Luxury<br />Fashion</h3>
-                    <p style={{ color: '#52525b', fontSize: 13, marginBottom: 20 }}>Timeless, refined, forever.</p>
-                    <Link href="/collections" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, color: '#f5f5f7', fontSize: 12, fontWeight: 700, textDecoration: 'none', textTransform: 'uppercase', letterSpacing: '.06em' }}>
-                      Shop <ChevronRight size={12} />
-                    </Link>
-                  </div>
-                </div>
-
-                {/* Row 2 left */}
-                <div className="lx-card" style={{
-                  gridColumn: '1 / 2', gridRow: '2 / 3',
-                  borderRadius: 22, minHeight: 220,
-                  background: 'linear-gradient(135deg, #0a1510 0%, #0d1f16 100%)',
-                  border: '1px solid rgba(255,255,255,.06)',
-                  position: 'relative', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', padding: 28,
-                }}>
-                  <div style={{ position: 'absolute', top: 0, left: 0, width: 220, height: 220, background: 'radial-gradient(ellipse, rgba(16,185,129,.12) 0%, transparent 65%)', pointerEvents: 'none' }} />
-                  <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,.85) 0%, transparent 50%)', zIndex: 0, borderRadius: 22 }} />
-                  <div style={{ position: 'relative', zIndex: 1 }}>
-                    <h3 className="lx-display" style={{ fontSize: 22, fontWeight: 700, color: '#f5f5f7', marginBottom: 6 }}>Accessories</h3>
-                    <p style={{ color: '#52525b', fontSize: 12 }}>Complete the look →</p>
-                  </div>
-                </div>
-
-                {/* Row 2 mid */}
-                <div className="lx-card" style={{
-                  gridColumn: '2 / 3', gridRow: '2 / 3',
-                  borderRadius: 22, minHeight: 220,
-                  background: 'linear-gradient(135deg, #150a0b 0%, #200f12 100%)',
-                  border: '1px solid rgba(255,255,255,.06)',
-                  position: 'relative', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', padding: 28,
-                }}>
-                  <div style={{ position: 'absolute', top: 0, right: 0, width: 220, height: 220, background: 'radial-gradient(ellipse, rgba(239,68,68,.08) 0%, transparent 65%)', pointerEvents: 'none' }} />
-                  <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,.85) 0%, transparent 50%)', zIndex: 0, borderRadius: 22 }} />
-                  <div style={{ position: 'relative', zIndex: 1 }}>
-                    <h3 className="lx-display" style={{ fontSize: 22, fontWeight: 700, color: '#f5f5f7', marginBottom: 6 }}>Footwear</h3>
-                    <p style={{ color: '#52525b', fontSize: 12 }}>New drops weekly →</p>
-                  </div>
-                </div>
-
-                {/* Row 2 right — CTA */}
-                <div className="lx-card" style={{
-                  gridColumn: '3 / 4', gridRow: '2 / 3',
-                  borderRadius: 22, minHeight: 220,
-                  background: 'linear-gradient(135deg, #1e1b4b 0%, #312e81 100%)',
-                  border: '1px solid rgba(99,102,241,.25)',
-                  display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: 28,
-                }}>
-                  <Zap size={26} style={{ color: '#a5b4fc', marginBottom: 16 }} />
-                  <h3 style={{ fontSize: 18, fontWeight: 700, color: '#f5f5f7', marginBottom: 8 }}>Member Drops</h3>
-                  <p style={{ color: '#a5b4fc', fontSize: 13, marginBottom: 20, lineHeight: 1.5 }}>Early access. Exclusive pricing. Members only.</p>
-                  <Link href="/new-arrivals" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, color: '#f5f5f7', fontSize: 12, fontWeight: 700, textDecoration: 'none', textTransform: 'uppercase', letterSpacing: '.08em' }}>
-                    Join Now <ArrowRight size={12} />
-                  </Link>
-                </div>
-
-              </div>
-            </div>
-          </section>
-
-          {/* ── PHILOSOPHY (Apple light section) ────────────────── */}
-          <section style={{ background: '#f5f5f7', padding: '120px 0' }}>
-            <div style={{ maxWidth: 1100, margin: '0 auto', padding: '0 48px' }}>
-              <div style={{ textAlign: 'center', marginBottom: 80 }}>
-                <p className="lx-label" style={{ marginBottom: 16 }}>Why Cabro</p>
-                <h2 className="lx-display" style={{ fontSize: 'clamp(30px, 4.5vw, 58px)', fontWeight: 700, color: '#1d1d1f', letterSpacing: '-0.03em', lineHeight: 1, marginBottom: 20 }}>
-                  Obsessively curated.<br />Relentlessly authentic.
-                </h2>
-                <p style={{ color: '#6e6e73', fontSize: 18, maxWidth: 500, margin: '0 auto', lineHeight: 1.65, fontWeight: 300 }}>
-                  Every product passes a 3-tier authentication. We partner only with heritage workshops that share our commitment to quality.
-                </p>
-              </div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 24 }}>
+              {/* Sub deals grid */}
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
                 {[
-                  { icon: <ShieldCheck size={22} />, title: 'Artisanal Sourcing', desc: 'Direct from heritage workshops across Europe and Asia. Zero middlemen. Full traceability.', accent: '#6366f1' },
-                  { icon: <Leaf size={22} />, title: 'Conscious Luxury', desc: 'Recycled metals. Organic textiles. Every material selected with the planet in mind.', accent: '#10b981' },
-                  { icon: <Truck size={22} />, title: 'White-Glove Delivery', desc: 'Climate-controlled. Discreet packaging. Delivered in pristine condition, every time.', accent: '#f59e0b' },
-                ].map((item, i) => (
-                  <div key={i} className="lx-phil" style={{ background: '#fff', borderRadius: 20, padding: '40px 32px', border: '1px solid rgba(0,0,0,.06)' }}>
-                    <div style={{ width: 50, height: 50, borderRadius: 14, background: `${item.accent}18`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: item.accent, marginBottom: 24 }}>
-                      {item.icon}
-                    </div>
-                    <h3 style={{ fontSize: 19, fontWeight: 700, color: '#1d1d1f', marginBottom: 12 }}>{item.title}</h3>
-                    <p style={{ color: '#6e6e73', fontSize: 15, lineHeight: 1.65 }}>{item.desc}</p>
-                  </div>
+                  { cat: "Fashion", pct: "40%", color: "#0f3460", icon: "👗" },
+                  { cat: "Home Decor", pct: "35%", color: "#1a4a1a", icon: "🏠" },
+                  { cat: "Sports", pct: "50%", color: "#4a1a0a", icon: "⚽" },
+                  { cat: "Beauty", pct: "30%", color: "#3a0a3a", icon: "💄" },
+                ].map((deal) => (
+                  <Link key={deal.cat} href={`/products?sale=true&cat=${deal.cat.toLowerCase()}`}
+                    className="hz-deal-tile"
+                    style={{ background: deal.color, borderRadius: 8, padding: "20px", textDecoration: "none", display: "flex", flexDirection: "column", gap: 6, transition: "opacity 0.15s" }}
+                  >
+                    <span style={{ fontSize: 24 }}>{deal.icon}</span>
+                    <span style={{ fontSize: 13, fontWeight: 600, color: "#fff" }}>{deal.cat}</span>
+                    <span style={{ fontSize: 20, fontWeight: 800, color: "#FF9900" }}>-{deal.pct}</span>
+                  </Link>
                 ))}
               </div>
             </div>
-          </section>
+          </div>
 
-          {/* ── WEEKLY PRODUCTS ──────────────────────────────────── */}
-          <section style={{ background: '#050505', padding: '120px 0' }}>
-            <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 48px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 56 }}>
-                <div>
-                  <p className="lx-label" style={{ marginBottom: 12 }}>Curated Weekly</p>
-                  <h2 className="lx-display" style={{ fontSize: 'clamp(26px, 3.5vw, 46px)', fontWeight: 700, color: '#f5f5f7', letterSpacing: '-0.03em', lineHeight: 1 }}>The Weekly Selection</h2>
-                </div>
-                <Link href="/products" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, color: '#52525b', fontSize: 14, fontWeight: 500, textDecoration: 'none' }}>
-                  View All <ArrowUpRight size={14} />
-                </Link>
-              </div>
-
-              {featuredProducts.length > 0 ? (
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 24 }}>
-                  {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                  {featuredProducts.map((product: any, idx: number) => {
-                    const avg = product.reviews?.length
-                      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                      ? product.reviews.reduce((a: number, r: any) => a + r.rating, 0) / product.reviews.length
-                      : null;
-                    const discountedPrice = product.discount ? product.price * (1 - product.discount / 100) : null;
-                    return (
-                      <Link key={product.id} href={`/products/${product.id}`} className="lx-prod" style={{ textDecoration: 'none' }}>
-                        {/* Image box */}
-                        <div style={{ borderRadius: 18, overflow: 'hidden', aspectRatio: '4/5', position: 'relative', background: '#0f0f0f', marginBottom: 18, border: '1px solid rgba(255,255,255,.05)' }}>
-                          {idx === 0 && (
-                            <div style={{ position: 'absolute', top: 14, left: 14, zIndex: 10, background: '#ef4444', color: '#fff', fontSize: '10px', fontWeight: 700, letterSpacing: '.1em', padding: '4px 12px', borderRadius: 100, textTransform: 'uppercase' }}>Hot</div>
-                          )}
-                          {product.discount && (
-                            <div style={{ position: 'absolute', top: idx === 0 ? 44 : 14, left: 14, zIndex: 10, background: '#6366f1', color: '#fff', fontSize: '10px', fontWeight: 700, padding: '4px 12px', borderRadius: 100 }}>−{product.discount}%</div>
-                          )}
-                          {product.images?.[0] ? (
-                            <Image src={product.images[0]} alt={product.name} fill className="lx-prod-img" style={{ objectFit: 'cover' }} />
-                          ) : (
-                            <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(135deg,#181818,#0d0d0d)', color: '#333', fontSize: 13, padding: 20, textAlign: 'center' }}>{product.name}</div>
-                          )}
-                          <div className="lx-prod-cta" style={{ position: 'absolute', inset: '0 12px 12px', top: 'auto', height: 44, background: 'rgba(245,245,247,.96)', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700, color: '#050505' }}>
-                            Quick View
-                          </div>
-                        </div>
-                        {/* Info */}
-                        <p className="lx-label" style={{ marginBottom: 6 }}>{product.category?.name}</p>
-                        <h3 style={{ fontSize: 15, fontWeight: 600, color: '#f5f5f7', lineHeight: 1.35, marginBottom: 10, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>{product.name}</h3>
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                            {discountedPrice ? (
-                              <>
-                                <span style={{ fontWeight: 700, color: '#f5f5f7', fontSize: 16 }}>${discountedPrice.toFixed(2)}</span>
-                                <span style={{ fontSize: 13, color: '#3f3f46', textDecoration: 'line-through' }}>${product.price.toFixed(2)}</span>
-                              </>
-                            ) : (
-                              <span style={{ fontWeight: 700, color: '#f5f5f7', fontSize: 16 }}>${product.price.toFixed(2)}</span>
-                            )}
-                          </div>
-                          {avg && (
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                              <Star size={11} style={{ fill: '#fbbf24', color: '#fbbf24' }} />
-                              <span style={{ fontSize: 12, color: '#52525b', fontWeight: 500 }}>{avg.toFixed(1)}</span>
-                            </div>
-                          )}
-                        </div>
-                      </Link>
-                    );
-                  })}
-                </div>
+          {/* ── NEW ARRIVALS STRIP ───────────────────────────── */}
+          <div className="hz-section-card" style={{ padding: "24px", marginBottom: 16 }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
+              <h2 className="hz-section-title" style={{ margin: 0 }}>New Arrivals</h2>
+              <Link href="/new-arrivals" className="hz-see-more">See all →</Link>
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16 }}>
+              {featuredProducts.slice(0, 4).length > 0 ? (
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                featuredProducts.slice(0, 4).map((product: any, idx: number) => (
+                  <ProductCard key={product.id + "-new"} product={product} index={idx + 10} />
+                ))
               ) : (
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 24 }}>
-                  {[...Array(6)].map((_, i) => (
-                    <div key={i}>
-                      <div style={{ aspectRatio: '4/5', background: '#111', borderRadius: 18, marginBottom: 16 }} />
-                      <div style={{ height: 13, background: '#111', borderRadius: 8, width: '68%', marginBottom: 8 }} />
-                      <div style={{ height: 11, background: '#111', borderRadius: 8, width: '44%' }} />
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              <div style={{ textAlign: 'center', marginTop: 64 }}>
-                <Link href="/products" className="lx-pill-outline" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, height: 52, padding: '0 36px', borderRadius: 100, color: '#f5f5f7', fontSize: 14, fontWeight: 600, textDecoration: 'none' }}>
-                  Browse All Products <ArrowRight size={14} />
-                </Link>
-              </div>
-            </div>
-          </section>
-
-          {/* ── TESTIMONIALS ─────────────────────────────────────── */}
-          <section style={{ background: '#0a0a0a', borderTop: '1px solid rgba(255,255,255,.05)', padding: '120px 0' }}>
-            <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 48px' }}>
-              <div style={{ textAlign: 'center', marginBottom: 64 }}>
-                <p className="lx-label" style={{ marginBottom: 14 }}>Client Stories</p>
-                <h2 className="lx-display" style={{ fontSize: 'clamp(26px, 3.5vw, 46px)', fontWeight: 700, color: '#f5f5f7', letterSpacing: '-0.03em' }}>The Luxe Experience</h2>
-              </div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 20 }}>
-                {TESTIMONIALS.map((t, i) => (
-                  <div key={i} className="lx-test" style={{ borderRadius: 20, padding: 36 }}>
-                    <div style={{ display: 'flex', gap: 3, marginBottom: 20 }}>
-                      {[...Array(t.rating)].map((_, s) => <Star key={s} size={13} style={{ fill: '#6366f1', color: '#6366f1' }} />)}
-                    </div>
-                    <p style={{ color: '#a1a1aa', fontSize: 15, lineHeight: 1.7, fontStyle: 'italic', marginBottom: 28 }}>"{t.text}"</p>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 14, paddingTop: 20, borderTop: '1px solid rgba(255,255,255,.06)' }}>
-                      <div style={{ width: 40, height: 40, borderRadius: '50%', background: 'linear-gradient(135deg,#6366f1,#8b5cf6)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, color: '#fff', flexShrink: 0 }}>{t.avatar}</div>
-                      <div>
-                        <p style={{ fontWeight: 600, color: '#f5f5f7', fontSize: 14, marginBottom: 2 }}>{t.name}</p>
-                        <p style={{ fontSize: 12, color: '#3f3f46' }}>{t.role}</p>
-                      </div>
+                [...Array(4)].map((_, i) => (
+                  <div key={i} style={{ background: "#fff", borderRadius: 8, border: "1px solid #eee", overflow: "hidden" }}>
+                    <div style={{ aspectRatio: "1/1", background: "#f5f5f5" }} />
+                    <div style={{ padding: "12px" }}>
+                      <div style={{ height: 12, background: "#eee", borderRadius: 4, marginBottom: 8, width: "80%" }} />
+                      <div style={{ height: 10, background: "#eee", borderRadius: 4, width: "55%" }} />
                     </div>
                   </div>
-                ))}
-              </div>
+                ))
+              )}
             </div>
-          </section>
+          </div>
 
-          {/* ── FLASH SALE (Nike bold energy) ───────────────────── */}
-          <section style={{ background: 'linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #1e1b4b 100%)', padding: '100px 0', borderTop: '1px solid rgba(99,102,241,.2)' }}>
-            <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 48px', textAlign: 'center' }}>
-              <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'rgba(255,255,255,.1)', padding: '6px 18px', borderRadius: 100, marginBottom: 20, border: '1px solid rgba(255,255,255,.12)' }}>
-                <Zap size={12} style={{ color: '#c7d2fe' }} />
-                <span className="lx-label" style={{ color: '#c7d2fe' }}>Limited Time</span>
+          {/* ── BECOME A SELLER CTA ──────────────────────────── */}
+          <div className="hz-section-card" style={{ marginBottom: 16, overflow: "hidden" }}>
+            <div style={{ background: "linear-gradient(135deg, #131921 0%, #232f3e 100%)", padding: "40px 48px", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 24 }}>
+              <div>
+                <h2 style={{ fontSize: 28, fontWeight: 800, color: "#fff", marginBottom: 8 }}>Start Selling on Cabro</h2>
+                <p style={{ fontSize: 15, color: "#aaa", maxWidth: 500 }}>
+                  Join thousands of sellers. Reach millions of customers. Set up your store in minutes.
+                </p>
               </div>
-              <h3 className="lx-display" style={{ fontSize: 'clamp(40px, 7vw, 96px)', fontWeight: 900, color: '#f5f5f7', letterSpacing: '-0.04em', lineHeight: .92, marginBottom: 18 }}>
-                Up to 40% off.
-              </h3>
-              <p style={{ color: '#a5b4fc', fontSize: 17, marginBottom: 40 }}>Selected items across all categories. No code needed.</p>
-              <Link href="/products" style={{ display: 'inline-flex', alignItems: 'center', gap: 10, height: 56, padding: '0 44px', background: '#f5f5f7', color: '#1e1b4b', borderRadius: 100, fontSize: 15, fontWeight: 700, textDecoration: 'none', boxShadow: '0 0 50px rgba(165,180,252,.2)' }}>
-                Shop the Sale <ArrowRight size={16} />
+              <Link href="/register?role=SELLER" style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "#FF9900", color: "#111", padding: "14px 36px", borderRadius: 24, fontSize: 15, fontWeight: 700, textDecoration: "none", flexShrink: 0 }}>
+                Start Selling <ChevronRight size={16} />
               </Link>
             </div>
-          </section>
+          </div>
 
         </main>
 

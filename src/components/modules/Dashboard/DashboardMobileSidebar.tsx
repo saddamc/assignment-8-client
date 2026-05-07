@@ -26,7 +26,7 @@ const DashboardMobileSidebar = ({ user, navItems, dashboardHome }: DashboardMobi
             <div className="flex h-16 items-center border-b px-6">
                 <Link href={dashboardHome} className="flex items-center gap-2">
                     <Image src="/logo.png" alt="Cabro" width={32} height={32} className="h-8 w-8 object-contain" />
-                    <Image src="/name.jpeg" alt="Cabro" width={96} height={28} className="h-7 w-auto object-contain" />
+                    <h1 className="text-[#FF6600] font-bold text-2xl">ABRO</h1>
                 </Link>
             </div>
 

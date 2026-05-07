@@ -49,7 +49,7 @@ export default function ResetPasswordPage() {
         <div className="text-center">
           <div className="flex items-center justify-center gap-2 mb-4">
             <Image src="/logo.png" alt="Cabro" width={40} height={40} className="h-10 w-10 object-contain rounded-full" />
-            <Image src="/name.jpeg" alt="Cabro" width={100} height={32} className="h-8 w-auto object-contain" />
+            <h1 className="text-[#FF6600] font-bold text-2xl">ABRO</h1>
           </div>
           <h2 className="text-3xl font-bold tracking-tight">Reset Password</h2>
           <p className="text-sm text-muted-foreground mt-2">

@@ -25,8 +25,8 @@ export default async function AdminProductsPage({
     const res = await serverFetch.get(`/products?${qs.join("&")}`);
     const data = await res.json();
     if (data.success) {
-      products = data.data?.data || [];
-      total = data.data?.meta?.total || products.length;
+      products = data.data || [];
+      total = data.meta?.total || products.length;
     }
   } catch { /* empty state */ }
 

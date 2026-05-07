@@ -1,25 +1,39 @@
 import { serverFetch } from "@/lib/server-fetch";
 import Link from "next/link";
 import Image from "next/image";
-import { Plus, Pencil, Trash2, Package } from "lucide-react";
+import { Plus, Pencil, Package } from "lucide-react";
+import SubmitForReview from "./SubmitForReview";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Product = any;
 
 const STATUS_STYLES: Record<string, string> = {
-  ACTIVE: "bg-emerald-50 text-emerald-700",
-  DRAFT: "bg-zinc-100 text-zinc-600",
-  ARCHIVED: "bg-red-50 text-red-600",
+  DRAFT:     "bg-zinc-100 text-zinc-600",
+  PENDING:   "bg-amber-100 text-amber-700",
+  PUBLISHED: "bg-emerald-50 text-emerald-700",
+  REJECTED:  "bg-red-50 text-red-600",
+  DISABLED:  "bg-zinc-700 text-white",
 };
 
-export default async function SellerProductsPage() {
+const STATUS_TABS = ["ALL", "DRAFT", "PENDING", "PUBLISHED", "REJECTED", "DISABLED"];
+
+export default async function SellerProductsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ status?: string }>;
+}) {
+  const { status } = await searchParams;
+  const statusFilter = status && status !== "ALL" ? `&status=${status}` : "";
+
   let products: Product[] = [];
 
   try {
-    const res = await serverFetch.get("/products/my-products");
+    const res = await serverFetch.get(`/products/my-products?limit=50${statusFilter}`);
     const data = await res.json();
     if (data.success) products = data.data?.data || data.data || [];
   } catch { /* empty state */ }
+
+  const activeTab = (status || "ALL").toUpperCase();
 
   return (
     <div className="space-y-8">
@@ -38,6 +52,23 @@ export default async function SellerProductsPage() {
         >
           <Plus className="w-4 h-4" /> Add Product
         </Link>
+      </div>
+
+      {/* Status filter tabs */}
+      <div className="flex gap-2 flex-wrap">
+        {STATUS_TABS.map((tab) => (
+          <Link
+            key={tab}
+            href={tab === "ALL" ? "/seller/products" : `/seller/products?status=${tab}`}
+            className={`px-4 py-1.5 rounded-full text-sm font-semibold border transition-colors ${
+              activeTab === tab
+                ? "bg-indigo-600 text-white border-indigo-600"
+                : "border-zinc-200 text-zinc-600 hover:border-zinc-300 hover:bg-zinc-50"
+            }`}
+          >
+            {tab.charAt(0) + tab.slice(1).toLowerCase()}
+          </Link>
+        ))}
       </div>
 
       {/* Table */}
@@ -64,14 +95,14 @@ export default async function SellerProductsPage() {
                   <th className="px-6 py-4">Product</th>
                   <th className="px-6 py-4">Price</th>
                   <th className="px-6 py-4">Stock</th>
-                  <th className="px-6 py-4">Category</th>
+                  <th className="px-6 py-4">Variants</th>
                   <th className="px-6 py-4">Status</th>
                   <th className="px-6 py-4">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-zinc-50">
                 {products.map((product: Product) => {
-                  const statusKey = (product.status || "ACTIVE").toUpperCase();
+                  const statusKey = (product.status || "DRAFT").toUpperCase();
                   return (
                     <tr key={product.id} className="hover:bg-zinc-50/50 transition-colors">
                       <td className="px-6 py-4">
@@ -101,11 +132,15 @@ export default async function SellerProductsPage() {
                         </div>
                       </td>
                       <td className="px-6 py-4 font-bold">
-                        ${(product.price || 0).toFixed(2)}
-                        {product.discount > 0 && (
-                          <span className="ml-2 text-xs text-red-500 font-normal">
-                            -{product.discount}%
+                        {product.discountPrice ? (
+                          <span>
+                            <span className="text-red-600">${product.discountPrice.toFixed(2)}</span>
+                            <span className="ml-2 text-xs text-zinc-400 line-through font-normal">
+                              ${product.price.toFixed(2)}
+                            </span>
                           </span>
+                        ) : (
+                          <span>${(product.price || 0).toFixed(2)}</span>
                         )}
                       </td>
                       <td className="px-6 py-4">
@@ -120,7 +155,7 @@ export default async function SellerProductsPage() {
                         </span>
                       </td>
                       <td className="px-6 py-4 text-zinc-600">
-                        {product.category?.name || "—"}
+                        {product._count?.variants ?? product.variants?.length ?? 0}
                       </td>
                       <td className="px-6 py-4">
                         <span
@@ -128,8 +163,13 @@ export default async function SellerProductsPage() {
                             STATUS_STYLES[statusKey] || "bg-zinc-100 text-zinc-600"
                           }`}
                         >
-                          {statusKey}
+                        {statusKey}
                         </span>
+                        {statusKey === "REJECTED" && product.approval?.reviewNote && (
+                          <p className="text-xs text-red-500 mt-1 max-w-40 line-clamp-2">
+                            {product.approval.reviewNote}
+                          </p>
+                        )}
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-2">
@@ -140,13 +180,18 @@ export default async function SellerProductsPage() {
                           >
                             <Pencil className="w-4 h-4" />
                           </Link>
-                          <Link
-                            href={`/products/${product.id}`}
-                            className="p-2 rounded-lg hover:bg-zinc-100 text-zinc-500 transition-colors text-xs font-semibold"
-                            title="View listing"
-                          >
-                            View
-                          </Link>
+                          {(statusKey === "DRAFT" || statusKey === "REJECTED") && (
+                            <SubmitForReview productId={product.id} />
+                          )}
+                          {statusKey === "PUBLISHED" && (
+                            <Link
+                              href={`/products/${product.id}`}
+                              className="p-2 rounded-lg hover:bg-zinc-100 text-zinc-500 transition-colors text-xs font-semibold"
+                              title="View listing"
+                            >
+                              View
+                            </Link>
+                          )}
                         </div>
                       </td>
                     </tr>

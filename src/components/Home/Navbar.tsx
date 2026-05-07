@@ -5,51 +5,42 @@ import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import {
-  Search, ShoppingBag, User, Menu, X,
-  ChevronDown, LayoutDashboard, Package,
-  Settings, LogOut, Store, Shield, ArrowRight,
+  Search, ShoppingCart, User, Menu, X,
+  ChevronDown, MapPin, LayoutDashboard, Package,
+  Settings, LogOut, Store, Shield,
 } from "lucide-react";
 import { useCartStore } from "@/hooks/useCartStore";
 import { useAuthStore } from "@/hooks/useAuthStore";
 import { logoutUser } from "@/services/auth/logoutUser";
 import type { AuthUser } from "@/hooks/useAuthStore";
 
-/* ─── Nav data ───────────────────────────────────────────────── */
-const NAV_LINKS = [
-  {
-    label: "Shop",
-    href: "/products",
-    mega: [
-      { label: "New Arrivals", href: "/new-arrivals", tag: "New" },
-      { label: "Best Sellers", href: "/products?sort=popular" },
-      { label: "Sale",         href: "/products?sale=true", tag: "Sale" },
-      { label: "All Products", href: "/products?view=all" },
-    ],
-  },
-  {
-    label: "Collections",
-    href: "/collections",
-    mega: [
-      { label: "Avant-Garde Tech",    href: "/collections?cat=tech" },
-      { label: "Quiet Luxury Fashion",href: "/collections?cat=fashion" },
-      { label: "Accessories",         href: "/collections?cat=accessories" },
-      { label: "Footwear",            href: "/collections?cat=footwear" },
-    ],
-  },
+const CAT_LINKS = [
+  { label: "All", href: "/products" },
+  { label: "Today's Deals", href: "/products?sale=true" },
   { label: "New Arrivals", href: "/new-arrivals" },
+  { label: "Best Sellers", href: "/products?sort=popular" },
+  { label: "Collections", href: "/collections" },
+  { label: "Electronics", href: "/products?cat=electronics" },
+  { label: "Fashion", href: "/products?cat=fashion" },
+  { label: "Home & Living", href: "/products?cat=home" },
+  { label: "Sports", href: "/products?cat=sports" },
+  { label: "Gift Cards", href: "/products?cat=gifts" },
 ];
 
-/* role → dashboard route */
+const SEARCH_CATS = [
+  "All Departments", "Electronics", "Fashion", "Home & Living",
+  "Sports", "Books", "Toys", "Beauty", "Automotive",
+];
+
 function dashRoute(role: AuthUser["role"]) {
-  if (role === "ADMIN")  return "/admin/dashboard";
+  if (role === "ADMIN") return "/admin/dashboard";
   if (role === "SELLER") return "/seller/dashboard";
   return "/dashboard";
 }
 
-/* ─── User dropdown ──────────────────────────────────────────── */
 function UserMenu({ user }: { user: AuthUser }) {
   const [open, setOpen] = useState(false);
-  const ref  = useRef<HTMLDivElement>(null);
+  const ref = useRef<HTMLDivElement>(null);
   const router = useRouter();
   const clearUser = useAuthStore((s) => s.clearUser);
   const clearCart = useCartStore((s) => s.clearCart);
@@ -68,16 +59,12 @@ function UserMenu({ user }: { user: AuthUser }) {
     router.push("/login");
   };
 
-  const initial  = user.name?.[0]?.toUpperCase() ?? "U";
-  const route    = dashRoute(user.role);
-
-  /* menu item definitions — unique labels used as keys */
   const menuItems = [
-    { label: "Dashboard",   href: route,                    icon: <LayoutDashboard size={14} />, show: true },
-    { label: "My Orders",   href: "/dashboard/orders",      icon: <Package size={14} />,         show: user.role === "CUSTOMER" },
-    { label: "My Products", href: "/seller/products",       icon: <Store size={14} />,           show: user.role === "SELLER" },
-    { label: "Admin Panel", href: "/admin/users",           icon: <Shield size={14} />,          show: user.role === "ADMIN" },
-    { label: "Settings",    href: "/dashboard/settings",    icon: <Settings size={14} />,        show: true },
+    { label: "Dashboard", href: dashRoute(user.role), icon: <LayoutDashboard size={14} />, show: true },
+    { label: "My Orders", href: "/dashboard/orders", icon: <Package size={14} />, show: user.role === "CUSTOMER" },
+    { label: "My Products", href: "/seller/products", icon: <Store size={14} />, show: user.role === "SELLER" },
+    { label: "Admin Panel", href: "/admin/users", icon: <Shield size={14} />, show: user.role === "ADMIN" },
+    { label: "Settings", href: "/dashboard/settings", icon: <Settings size={14} />, show: true },
   ].filter((item) => item.show);
 
   return (
@@ -85,83 +72,47 @@ function UserMenu({ user }: { user: AuthUser }) {
       <button
         onClick={() => setOpen((v) => !v)}
         style={{
-          display: "flex", alignItems: "center", gap: 8,
-          height: 36, padding: "0 14px", borderRadius: 100,
-          background: open ? "rgba(255,255,255,0.1)" : "rgba(255,255,255,0.06)",
-          border: "1px solid rgba(255,255,255,0.12)",
-          cursor: "pointer", color: "#f5f5f7",
-          transition: "background 0.2s ease",
+          display: "flex", flexDirection: "column", alignItems: "flex-start",
+          padding: "6px 10px", borderRadius: 4,
+          background: "transparent", border: "2px solid transparent",
+          cursor: "pointer", color: "#fff", transition: "border-color 0.15s",
         }}
-        onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(255,255,255,0.1)")}
-        onMouseLeave={(e) => { if (!open) e.currentTarget.style.background = "rgba(255,255,255,0.06)"; }}
+        onMouseEnter={(e) => (e.currentTarget.style.borderColor = "#FF9900")}
+        onMouseLeave={(e) => { if (!open) e.currentTarget.style.borderColor = "transparent"; }}
       >
-        <div style={{
-          width: 22, height: 22, borderRadius: "50%",
-          background: "linear-gradient(135deg,#6366f1,#8b5cf6)",
-          display: "flex", alignItems: "center", justifyContent: "center",
-          fontSize: 10, fontWeight: 700, color: "#fff", flexShrink: 0,
-        }}>{initial}</div>
-        <span style={{ fontSize: 13, fontWeight: 500, maxWidth: 88, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-          {user.name}
+        <span style={{ fontSize: 11, color: "#ccc", lineHeight: 1 }}>Hello, {user.name?.split(" ")[0]}</span>
+        <span style={{ fontSize: 13, fontWeight: 700, display: "flex", alignItems: "center", gap: 4, lineHeight: 1.4 }}>
+          Account <ChevronDown size={12} />
         </span>
-        <ChevronDown size={12} style={{ color: "#86868b", transition: "transform 0.2s", transform: open ? "rotate(180deg)" : "none" }} />
       </button>
-
       {open && (
         <div style={{
-          position: "absolute", right: 0, top: "calc(100% + 10px)",
-          width: 240, borderRadius: 18, overflow: "hidden",
-          background: "#1c1c1e", border: "1px solid rgba(255,255,255,0.1)",
-          boxShadow: "0 24px 64px rgba(0,0,0,0.6)",
-          animation: "lxDropIn 0.18s cubic-bezier(.16,1,.3,1) both",
-          zIndex: 200,
+          position: "absolute", right: 0, top: "calc(100% + 4px)",
+          width: 240, borderRadius: 8,
+          background: "#fff", border: "1px solid #ddd",
+          boxShadow: "0 4px 24px rgba(0,0,0,0.2)", zIndex: 200,
         }}>
-          {/* header */}
-          <div style={{ padding: "16px 18px", borderBottom: "1px solid rgba(255,255,255,0.07)", background: "rgba(255,255,255,0.03)" }}>
-            <p style={{ fontSize: 13, fontWeight: 600, color: "#f5f5f7", marginBottom: 2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{user.name}</p>
-            <p style={{ fontSize: 11, color: "#52525b", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{user.email}</p>
-            <span style={{
-              display: "inline-block", marginTop: 8, padding: "2px 10px",
-              background: "rgba(99,102,241,0.2)", border: "1px solid rgba(99,102,241,0.3)",
-              borderRadius: 100, fontSize: 9, fontWeight: 700,
-              letterSpacing: "0.1em", textTransform: "uppercase", color: "#a5b4fc",
-            }}>{user.role}</span>
+          <div style={{ padding: "14px 16px", borderBottom: "1px solid #eee", background: "#f9f9f9", borderRadius: "8px 8px 0 0" }}>
+            <p style={{ fontSize: 13, fontWeight: 700, color: "#111", marginBottom: 2 }}>{user.name}</p>
+            <p style={{ fontSize: 11, color: "#888" }}>{user.email}</p>
+            <span style={{ display: "inline-block", marginTop: 6, padding: "2px 8px", background: "#FF9900", borderRadius: 100, fontSize: 9, fontWeight: 700, letterSpacing: ".08em", textTransform: "uppercase" as const, color: "#111" }}>{user.role}</span>
           </div>
-
-          {/* links — keyed by label (guaranteed unique) */}
-          <div style={{ padding: "8px" }}>
+          <div style={{ padding: "6px" }}>
             {menuItems.map((item) => (
-              <Link
-                key={item.label}
-                href={item.href}
-                onClick={() => setOpen(false)}
-                style={{
-                  display: "flex", alignItems: "center", gap: 12,
-                  padding: "10px 12px", borderRadius: 12,
-                  fontSize: 13, color: "#a1a1aa", textDecoration: "none",
-                  transition: "all 0.15s ease",
-                }}
-                onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.06)"; (e.currentTarget as HTMLElement).style.color = "#f5f5f7"; }}
-                onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "transparent"; (e.currentTarget as HTMLElement).style.color = "#a1a1aa"; }}
+              <Link key={item.label} href={item.href} onClick={() => setOpen(false)}
+                style={{ display: "flex", alignItems: "center", gap: 10, padding: "9px 12px", borderRadius: 6, fontSize: 13, color: "#333", textDecoration: "none", transition: "background 0.12s" }}
+                onMouseEnter={(e) => (e.currentTarget.style.background = "#f0f0f0")}
+                onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
               >
-                <span style={{ color: "#52525b" }}>{item.icon}</span>
-                {item.label}
+                <span style={{ color: "#888" }}>{item.icon}</span>{item.label}
               </Link>
             ))}
           </div>
-
-          {/* sign out */}
-          <div style={{ padding: "8px", borderTop: "1px solid rgba(255,255,255,0.07)" }}>
+          <div style={{ padding: "6px", borderTop: "1px solid #eee" }}>
             <button
               onClick={handleLogout}
-              style={{
-                display: "flex", alignItems: "center", gap: 12,
-                padding: "10px 12px", width: "100%", borderRadius: 12,
-                fontSize: 13, color: "#f87171", background: "transparent",
-                border: "none", cursor: "pointer", textAlign: "left",
-                transition: "background 0.15s ease",
-              }}
-              onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(239,68,68,0.1)")}
+              style={{ display: "flex", alignItems: "center", gap: 10, padding: "9px 12px", width: "100%", borderRadius: 6, fontSize: 13, color: "#c0392b", background: "transparent", border: "none", cursor: "pointer", transition: "background 0.12s" }}
+              onMouseEnter={(e) => (e.currentTarget.style.background = "#fff0ee")}
               onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
             >
               <LogOut size={14} /> Sign out
@@ -173,408 +124,228 @@ function UserMenu({ user }: { user: AuthUser }) {
   );
 }
 
-/* ─── Mega dropdown ──────────────────────────────────────────── */
-function MegaMenu({
-  items,
-  visible,
-}: {
-  items: { label: string; href: string; tag?: string }[];
-  visible: boolean;
-}) {
-  return (
-    <div style={{
-      position: "absolute", top: "calc(100% + 8px)", left: "50%",
-      minWidth: 220, borderRadius: 16,
-      background: "#1c1c1e", border: "1px solid rgba(255,255,255,0.1)",
-      boxShadow: "0 20px 60px rgba(0,0,0,0.6)",
-      padding: "8px",
-      opacity: visible ? 1 : 0,
-      pointerEvents: visible ? "all" : "none",
-      transform: visible ? "translateX(-50%) translateY(0)" : "translateX(-50%) translateY(-8px)",
-      transition: "opacity 0.2s ease, transform 0.2s ease",
-      zIndex: 100,
-    }}>
-      {/* key by label — always unique within a single mega menu */}
-      {items.map((item) => (
-        <Link
-          key={item.label}
-          href={item.href}
-          style={{
-            display: "flex", alignItems: "center", justifyContent: "space-between",
-            padding: "10px 14px", borderRadius: 10,
-            fontSize: 13, color: "#a1a1aa", textDecoration: "none",
-            transition: "all 0.15s ease",
-          }}
-          onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.06)"; (e.currentTarget as HTMLElement).style.color = "#f5f5f7"; }}
-          onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "transparent"; (e.currentTarget as HTMLElement).style.color = "#a1a1aa"; }}
-        >
-          <span>{item.label}</span>
-          {item.tag && (
-            <span style={{
-              fontSize: 9, fontWeight: 700, letterSpacing: "0.08em",
-              textTransform: "uppercase", padding: "2px 8px", borderRadius: 100,
-              background: item.tag === "Sale" ? "rgba(239,68,68,0.2)" : "rgba(99,102,241,0.2)",
-              color: item.tag === "Sale" ? "#f87171" : "#a5b4fc",
-              border: `1px solid ${item.tag === "Sale" ? "rgba(239,68,68,0.3)" : "rgba(99,102,241,0.3)"}`,
-            }}>{item.tag}</span>
-          )}
-        </Link>
-      ))}
-    </div>
-  );
-}
-
-/* ─── Search overlay ─────────────────────────────────────────── */
-function SearchOverlay({ onClose }: { onClose: () => void }) {
-  const [query, setQuery] = useState("");
-  const router   = useRouter();
-  const inputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    inputRef.current?.focus();
-    const fn = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
-    document.addEventListener("keydown", fn);
-    return () => document.removeEventListener("keydown", fn);
-  }, [onClose]);
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (query.trim()) {
-      router.push(`/products?searchTerm=${encodeURIComponent(query.trim())}`);
-      onClose();
-    }
-  };
-
-  return (
-    <div
-      style={{
-        position: "fixed", inset: 0, zIndex: 300,
-        background: "rgba(0,0,0,0.85)",
-        backdropFilter: "blur(20px)",
-        display: "flex", flexDirection: "column",
-        alignItems: "center", paddingTop: "20vh",
-        animation: "lxFadeIn 0.2s ease both",
-      }}
-      onClick={(e) => e.target === e.currentTarget && onClose()}
-    >
-      <div style={{ width: "100%", maxWidth: 640, padding: "0 24px" }}>
-        <p style={{
-          fontSize: 11, fontWeight: 600, letterSpacing: "0.14em",
-          textTransform: "uppercase", color: "#52525b",
-          marginBottom: 20, textAlign: "center",
-        }}>Search</p>
-
-        <form onSubmit={handleSubmit} style={{ position: "relative" }}>
-          <Search size={20} style={{ position: "absolute", left: 20, top: "50%", transform: "translateY(-50%)", color: "#52525b" }} />
-          <input
-            ref={inputRef}
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search products, collections…"
-            style={{
-              width: "100%", height: 60,
-              paddingLeft: 56, paddingRight: 60,
-              background: "rgba(255,255,255,0.06)",
-              border: "1px solid rgba(255,255,255,0.12)",
-              borderRadius: 16, fontSize: 18, color: "#f5f5f7",
-              outline: "none", fontFamily: "inherit",
-              transition: "border-color 0.2s",
-            }}
-            onFocus={(e)  => (e.currentTarget.style.borderColor = "rgba(99,102,241,0.5)")}
-            onBlur={(e)   => (e.currentTarget.style.borderColor = "rgba(255,255,255,0.12)")}
-          />
-          {query && (
-            <button
-              type="submit"
-              style={{
-                position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)",
-                width: 36, height: 36, borderRadius: 10,
-                background: "#6366f1", border: "none", cursor: "pointer",
-                display: "flex", alignItems: "center", justifyContent: "center",
-              }}
-            >
-              <ArrowRight size={16} style={{ color: "#fff" }} />
-            </button>
-          )}
-        </form>
-
-        <button
-          onClick={onClose}
-          style={{
-            display: "block", margin: "20px auto 0",
-            fontSize: 12, color: "#52525b",
-            background: "none", border: "none", cursor: "pointer",
-            letterSpacing: "0.06em",
-          }}
-        >Press ESC to close</button>
-      </div>
-    </div>
-  );
-}
-
-/* ─── Navbar ─────────────────────────────────────────────────── */
 const Navbar = () => {
-  const [mounted,    setMounted]    = useState(false);
+  const [mounted, setMounted] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [searchOpen, setSearchOpen] = useState(false);
-  const [scrolled,   setScrolled]   = useState(false);
-  const [activeMenu, setActiveMenu] = useState<string | null>(null);
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [searchCat, setSearchCat] = useState("All Departments");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [catOpen, setCatOpen] = useState(false);
+  const catRef = useRef<HTMLDivElement>(null);
+  const router = useRouter();
+  // suppress unused-var warning
+  const _openMenu = useCallback(() => {}, []);
+  void _openMenu;
 
   const itemCount = useCartStore((s) => s.getItemCount());
-  const user      = useAuthStore((s) => s.user);
+  const user = useAuthStore((s) => s.user);
 
   useEffect(() => { setMounted(true); }, []);
 
   useEffect(() => {
-    const fn = () => setScrolled(window.scrollY > 20);
-    window.addEventListener("scroll", fn, { passive: true });
-    return () => window.removeEventListener("scroll", fn);
+    const fn = (e: MouseEvent) => {
+      if (catRef.current && !catRef.current.contains(e.target as Node)) setCatOpen(false);
+    };
+    document.addEventListener("mousedown", fn);
+    return () => document.removeEventListener("mousedown", fn);
   }, []);
 
-  useEffect(() => {
-    const fn = () => { if (window.innerWidth >= 768) setMobileOpen(false); };
-    window.addEventListener("resize", fn);
-    return () => window.removeEventListener("resize", fn);
-  }, []);
-
-  const openMenu  = useCallback((label: string) => {
-    if (timerRef.current) clearTimeout(timerRef.current);
-    setActiveMenu(label);
-  }, []);
-
-  const closeMenu = useCallback(() => {
-    timerRef.current = setTimeout(() => setActiveMenu(null), 120);
-  }, []);
+  const handleSearch = useCallback((e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      router.push(`/products?searchTerm=${encodeURIComponent(searchQuery.trim())}`);
+    }
+  }, [searchQuery, router]);
 
   return (
     <>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&display=swap');
-
-        @keyframes lxDropIn {
-          from { opacity:0; transform:translateY(-8px); }
-          to   { opacity:1; transform:translateY(0); }
+        .hz-nav-catnav {
+          background: #232f3e;
+          color: #fff;
+          border-bottom: 1px solid #3a4553;
+          overflow-x: auto;
+          scrollbar-width: none;
         }
-        @keyframes lxFadeIn {
-          from { opacity:0; }
-          to   { opacity:1; }
+        .hz-nav-catnav::-webkit-scrollbar { display: none; }
+        .hz-nav-link-pill {
+          display: inline-flex; align-items: center;
+          padding: 8px 12px; font-size: 13px; font-weight: 400;
+          color: #fff; text-decoration: none; border-radius: 3px;
+          border: 2px solid transparent; white-space: nowrap;
+          transition: border-color 0.12s;
         }
-        @keyframes lxSlideDown {
-          from { opacity:0; transform:translateY(-12px); }
-          to   { opacity:1; transform:translateY(0); }
+        .hz-nav-link-pill:hover { border-color: #fff; }
+        .hz-search-cat-btn {
+          display: flex; align-items: center; gap: 4px;
+          padding: 0 10px; height: 38px;
+          background: #f3f3f3; border: none;
+          border-radius: 4px 0 0 4px; font-size: 12px;
+          color: #333; cursor: pointer; white-space: nowrap;
+          border-right: 1px solid #cdcdcd; transition: background 0.12s;
         }
-
-        .lx-nav-link {
-          position: relative;
-          font-size: 13px; font-weight: 500;
-          color: #a1a1aa; text-decoration: none;
-          letter-spacing: 0.01em;
-          transition: color 0.2s ease;
-          padding: 4px 0;
-          display: inline-flex; align-items: center; gap: 4px;
+        .hz-search-cat-btn:hover { background: #e8e8e8; }
+        .hz-search-input {
+          flex: 1; height: 38px; padding: 0 12px; font-size: 14px;
+          border: none; outline: none; background: #fff; color: #111; min-width: 0;
         }
-        .lx-nav-link::after {
-          content: '';
-          position: absolute; bottom: -2px; left: 0; right: 0;
-          height: 1px; background: #f5f5f7;
-          transform: scaleX(0);
-          transition: transform 0.25s cubic-bezier(.16,1,.3,1);
-          transform-origin: left;
+        .hz-search-input::placeholder { color: #999; }
+        .hz-search-btn {
+          width: 44px; height: 38px; background: #FF9900; border: none;
+          border-radius: 0 4px 4px 0; display: flex; align-items: center;
+          justify-content: center; cursor: pointer; transition: background 0.12s; flex-shrink: 0;
         }
-        .lx-nav-link:hover            { color: #f5f5f7; }
-        .lx-nav-link:hover::after     { transform: scaleX(1); }
-
-        .lx-icon-btn {
-          display: flex; align-items: center; justify-content: center;
-          width: 36px; height: 36px; border-radius: 50%;
-          background: transparent; border: none;
-          cursor: pointer; color: #a1a1aa;
-          transition: background 0.2s, color 0.2s;
-          text-decoration: none; position: relative;
+        .hz-search-btn:hover { background: #e68a00; }
+        .hz-top-action {
+          display: flex; flex-direction: column; padding: 6px 10px; border-radius: 4px;
+          border: 2px solid transparent; cursor: pointer; text-decoration: none;
+          color: #fff; transition: border-color 0.12s; background: transparent; line-height: 1;
         }
-        .lx-icon-btn:hover { background: rgba(255,255,255,0.08); color: #f5f5f7; }
-
-        .lx-mobile-link {
-          display: flex; align-items: center;
-          height: 50px; padding: 0 20px; border-radius: 14px;
-          font-size: 15px; font-weight: 500;
-          color: #a1a1aa; text-decoration: none;
-          transition: all 0.15s ease;
+        .hz-top-action:hover { border-color: #FF9900; }
+        .hz-cart-btn {
+          display: flex; align-items: center; gap: 4px; padding: 6px 10px;
+          border-radius: 4px; border: 2px solid transparent;
+          text-decoration: none; color: #fff; transition: border-color 0.12s;
         }
-        .lx-mobile-link:hover { background: rgba(255,255,255,0.06); color: #f5f5f7; }
-
-        .lx-cart-badge {
-          position: absolute; top: 2px; right: 2px;
-          min-width: 16px; height: 16px; border-radius: 8px;
-          background: #6366f1; color: #fff;
-          font-size: 9px; font-weight: 700;
-          display: flex; align-items: center; justify-content: center;
-          padding: 0 4px;
+        .hz-cart-btn:hover { border-color: #FF9900; }
+        @media (max-width: 768px) {
+          .hz-desktop-only { display: none !important; }
+          .hz-mobile-show { display: flex !important; }
         }
-
-        .lx-signin-btn {
-          display: inline-flex; align-items: center; gap: 7px;
-          height: 34px; padding: 0 16px; border-radius: 100px;
-          background: rgba(255,255,255,0.06);
-          border: 1px solid rgba(255,255,255,0.12);
-          font-size: 13px; font-weight: 500; color: #a1a1aa;
-          text-decoration: none; transition: all 0.2s ease; margin-left: 4px;
-        }
-        .lx-signin-btn:hover { background: rgba(255,255,255,0.1); color: #f5f5f7; }
-
-        @media (max-width: 767px) {
-          .lx-desktop-nav   { display: none !important; }
-          .lx-mobile-toggle { display: flex !important; }
-        }
-        @media (min-width: 768px) {
-          .lx-mobile-toggle { display: none !important; }
+        @media (min-width: 769px) {
+          .hz-mobile-show { display: none !important; }
         }
       `}</style>
 
-      <header style={{
-        position: "sticky", top: 0, zIndex: 50, width: "100%",
-        fontFamily: "DM Sans, sans-serif",
-        background: scrolled ? "rgba(5,5,5,0.9)" : "rgba(5,5,5,0.75)",
-        backdropFilter: "blur(24px) saturate(180%)",
-        WebkitBackdropFilter: "blur(24px) saturate(180%)",
-        borderBottom: `1px solid ${scrolled ? "rgba(255,255,255,0.09)" : "rgba(255,255,255,0.05)"}`,
-        transition: "background 0.3s ease, border-color 0.3s ease",
-      }}>
-        <div style={{
-          maxWidth: 1200, margin: "0 auto",
-          padding: "0 48px", height: 52,
-          display: "flex", alignItems: "center",
-          justifyContent: "space-between", gap: 24,
-        }}>
-
+      <header style={{ position: "sticky", top: 0, zIndex: 100, background: "#131921", boxShadow: "0 2px 8px rgba(0,0,0,0.4)", fontFamily: "Arial, sans-serif" }}>
+        {/* Top bar */}
+        <div style={{ maxWidth: 1400, margin: "0 auto", padding: "8px 16px", display: "flex", alignItems: "center", gap: 8 }}>
           {/* Logo */}
-          <Link href="/" style={{ display: "flex", alignItems: "center", gap: 4, flexShrink: 0, textDecoration: "none" }}>
-            <Image src="/logo.png" alt="Logo"  width={30} height={30} style={{ objectFit: "contain", height: 30, width: "auto" }} />
-            <Image src="/name.png" alt="Brand" width={110} height={30} style={{ objectFit: "contain", height: 28, width: "auto" }} />
+          <Link href="/" style={{ display: "flex", alignItems: "center", gap: 4, textDecoration: "none", flexShrink: 0 }}
+            className="hz-top-action"
+          >
+            <Image src="/logo.png" alt="Cabro" width={28} height={28} style={{ objectFit: "contain" }} />
+            <span style={{ color: "#FF9900", fontWeight: 800, fontSize: 20 }}>ABRO</span>
+            <span style={{ color: "#ccc", fontSize: 9, alignSelf: "flex-end", marginBottom: 2 }}>.com</span>
           </Link>
 
-          {/* Desktop nav — keyed by label (unique) */}
-          <nav className="lx-desktop-nav" style={{ display: "flex", alignItems: "center", gap: 32, flex: 1, justifyContent: "center" }}>
-            {NAV_LINKS.map((link) => (
-              <div
-                key={link.label}
-                style={{ position: "relative" }}
-                onMouseEnter={() => link.mega && openMenu(link.label)}
-                onMouseLeave={() => link.mega && closeMenu()}
-              >
-                <Link href={link.href} className="lx-nav-link">
-                  {link.label}
-                  {link.mega && (
-                    <ChevronDown size={11} style={{
-                      color: "#52525b", transition: "transform 0.2s",
-                      transform: activeMenu === link.label ? "rotate(180deg)" : "rotate(0deg)",
-                    }} />
-                  )}
-                </Link>
-                {link.mega && (
-                  <MegaMenu items={link.mega} visible={activeMenu === link.label} />
-                )}
-              </div>
-            ))}
-          </nav>
+          {/* Deliver to */}
+          <div className="hz-top-action hz-desktop-only" style={{ flexShrink: 0 }}>
+            <span style={{ fontSize: 11, color: "#ccc" }}>Deliver to</span>
+            <span style={{ fontSize: 13, fontWeight: 700, display: "flex", alignItems: "center", gap: 3 }}>
+              <MapPin size={13} /> New York
+            </span>
+          </div>
 
-          {/* Right actions */}
-          <div style={{ display: "flex", alignItems: "center", gap: 4, flexShrink: 0 }}>
-            <button className="lx-icon-btn" onClick={() => setSearchOpen(true)} aria-label="Search">
-              <Search size={17} />
-            </button>
-
-            <Link href="/cart" className="lx-icon-btn" aria-label="Cart">
-              <ShoppingBag size={17} />
-              {mounted && itemCount > 0 && (
-                <span className="lx-cart-badge">{itemCount > 9 ? "9+" : itemCount}</span>
+          {/* Search */}
+          <form onSubmit={handleSearch} style={{ flex: 1, display: "flex", alignItems: "center", borderRadius: 4, overflow: "hidden", minWidth: 0 }}>
+            <div ref={catRef} style={{ position: "relative", flexShrink: 0 }} className="hz-desktop-only">
+              <button type="button" className="hz-search-cat-btn" onClick={() => setCatOpen((v) => !v)}>
+                {searchCat.length > 12 ? searchCat.slice(0, 12) + "…" : searchCat}
+                <ChevronDown size={10} />
+              </button>
+              {catOpen && (
+                <div style={{ position: "absolute", top: "100%", left: 0, width: 200, background: "#fff", border: "1px solid #ccc", borderRadius: 4, boxShadow: "0 4px 16px rgba(0,0,0,0.15)", zIndex: 200, maxHeight: 280, overflowY: "auto" }}>
+                  {SEARCH_CATS.map((c) => (
+                    <button key={c} type="button" onClick={() => { setSearchCat(c); setCatOpen(false); }}
+                      style={{ display: "block", width: "100%", textAlign: "left", padding: "8px 14px", fontSize: 13, color: "#111", background: c === searchCat ? "#f0f7ff" : "transparent", border: "none", cursor: "pointer", fontWeight: c === searchCat ? 700 : 400 }}
+                      onMouseEnter={(e) => { if (c !== searchCat) e.currentTarget.style.background = "#f5f5f5"; }}
+                      onMouseLeave={(e) => { if (c !== searchCat) e.currentTarget.style.background = "transparent"; }}
+                    >{c}</button>
+                  ))}
+                </div>
               )}
-            </Link>
+            </div>
+            <input className="hz-search-input" placeholder="Search products, brands, categories…" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
+            <button type="submit" className="hz-search-btn" aria-label="Search">
+              <Search size={18} color="#111" />
+            </button>
+          </form>
 
+          {/* Account */}
+          <div className="hz-desktop-only">
             {mounted && user ? (
               <UserMenu user={user} />
             ) : (
-              <Link href="/login" className="lx-signin-btn">
-                <User size={14} /> Sign in
+              <Link href="/login" className="hz-top-action" style={{ textDecoration: "none" }}>
+                <span style={{ fontSize: 11, color: "#ccc" }}>Hello, sign in</span>
+                <span style={{ fontSize: 13, fontWeight: 700, display: "flex", alignItems: "center", gap: 3 }}>
+                  Account <ChevronDown size={11} />
+                </span>
               </Link>
             )}
-
-            {/* Mobile toggle */}
-            <button
-              className="lx-icon-btn lx-mobile-toggle"
-              onClick={() => setMobileOpen((v) => !v)}
-              aria-label="Menu"
-              style={{ marginLeft: 4 }}
-            >
-              {mobileOpen ? <X size={18} /> : <Menu size={18} />}
-            </button>
           </div>
+
+          {/* Returns */}
+          <Link href="/dashboard/orders" className="hz-top-action hz-desktop-only" style={{ textDecoration: "none", flexShrink: 0 }}>
+            <span style={{ fontSize: 11, color: "#ccc" }}>Returns</span>
+            <span style={{ fontSize: 13, fontWeight: 700 }}>&amp; Orders</span>
+          </Link>
+
+          {/* Cart */}
+          <Link href="/cart" className="hz-cart-btn" style={{ flexShrink: 0 }}>
+            <div style={{ position: "relative" }}>
+              <ShoppingCart size={28} />
+              {mounted && itemCount > 0 && (
+                <span style={{ position: "absolute", top: -6, right: -6, minWidth: 18, height: 18, borderRadius: 9, background: "#FF9900", color: "#111", fontSize: 11, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", padding: "0 3px" }}>
+                  {itemCount > 99 ? "99+" : itemCount}
+                </span>
+              )}
+            </div>
+            <span style={{ fontSize: 13, fontWeight: 700 }} className="hz-desktop-only">Cart</span>
+          </Link>
+
+          {/* Mobile hamburger */}
+          <button className="hz-mobile-show" onClick={() => setMobileOpen((v) => !v)}
+            style={{ background: "none", border: "none", color: "#fff", cursor: "pointer", padding: 4 }}
+          >
+            {mobileOpen ? <X size={22} /> : <Menu size={22} />}
+          </button>
         </div>
 
-        {/* Mobile drawer */}
-        {mobileOpen && (
-          <div style={{
-            borderTop: "1px solid rgba(255,255,255,0.07)",
-            background: "rgba(5,5,5,0.97)",
-            backdropFilter: "blur(24px)",
-            padding: "16px 20px 28px",
-            animation: "lxSlideDown 0.22s cubic-bezier(.16,1,.3,1) both",
-          }}>
-            {/* Tap to open full search overlay */}
-            <div
-              onClick={() => { setMobileOpen(false); setSearchOpen(true); }}
-              style={{
-                position: "relative", marginBottom: 16, cursor: "pointer",
-              }}
-            >
-              <Search size={15} style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", color: "#52525b" }} />
-              <div style={{
-                height: 44, paddingLeft: 42,
-                background: "rgba(255,255,255,0.05)",
-                border: "1px solid rgba(255,255,255,0.1)",
-                borderRadius: 12, display: "flex", alignItems: "center",
-                fontSize: 14, color: "#52525b",
-              }}>Search products…</div>
-            </div>
-
-            {/* Mobile nav links — keyed by label (unique) */}
-            <nav style={{ marginBottom: 20 }}>
-              {NAV_LINKS.map((link) => (
-                <Link
-                  key={link.label}
-                  href={link.href}
-                  className="lx-mobile-link"
-                  onClick={() => setMobileOpen(false)}
-                >
-                  {link.label}
-                </Link>
-              ))}
-            </nav>
-
-            {!user && (
-              <div style={{ display: "flex", gap: 10 }}>
-                <Link href="/login" onClick={() => setMobileOpen(false)} style={{
-                  flex: 1, height: 46, borderRadius: 100,
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  fontSize: 14, fontWeight: 600, color: "#f5f5f7",
-                  background: "rgba(255,255,255,0.06)",
-                  border: "1px solid rgba(255,255,255,0.12)",
-                  textDecoration: "none",
-                }}>Sign in</Link>
-                <Link href="/register" onClick={() => setMobileOpen(false)} style={{
-                  flex: 1, height: 46, borderRadius: 100,
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  fontSize: 14, fontWeight: 600, color: "#fff",
-                  background: "#6366f1", textDecoration: "none",
-                }}>Register</Link>
-              </div>
-            )}
+        {/* Category nav */}
+        <nav className="hz-nav-catnav">
+          <div style={{ maxWidth: 1400, margin: "0 auto", padding: "0 16px", display: "flex", alignItems: "center" }}>
+            {CAT_LINKS.map((link) => (
+              <Link key={link.href} href={link.href} className="hz-nav-link-pill"
+                style={link.label === "All" ? { fontWeight: 700, gap: 5 } : {}}
+              >
+                {link.label === "All" && <Menu size={14} />}
+                {link.label}
+              </Link>
+            ))}
           </div>
-        )}
+        </nav>
       </header>
 
-      {searchOpen && <SearchOverlay onClose={() => setSearchOpen(false)} />}
+      {/* Mobile drawer */}
+      {mobileOpen && (
+        <div style={{ position: "fixed", inset: 0, zIndex: 300, background: "rgba(0,0,0,0.7)" }} onClick={() => setMobileOpen(false)}>
+          <div onClick={(e) => e.stopPropagation()} style={{ position: "absolute", top: 0, left: 0, bottom: 0, width: 280, background: "#131921", overflowY: "auto", padding: 16 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+              <span style={{ color: "#FF9900", fontWeight: 800, fontSize: 18 }}>ABRO.com</span>
+              <button onClick={() => setMobileOpen(false)} style={{ background: "none", border: "none", color: "#fff", cursor: "pointer" }}><X size={20} /></button>
+            </div>
+            {mounted && user && (
+              <div style={{ background: "#232f3e", borderRadius: 8, padding: "12px 14px", marginBottom: 14 }}>
+                <p style={{ color: "#FF9900", fontWeight: 700, fontSize: 14 }}>Hello, {user.name}</p>
+                <p style={{ color: "#aaa", fontSize: 12 }}>{user.email}</p>
+              </div>
+            )}
+            {CAT_LINKS.map((link) => (
+              <Link key={link.href} href={link.href} onClick={() => setMobileOpen(false)}
+                style={{ display: "block", padding: "11px 14px", borderRadius: 6, fontSize: 14, color: "#e0e0e0", textDecoration: "none", borderBottom: "1px solid rgba(255,255,255,0.06)" }}
+                onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(255,255,255,0.06)")}
+                onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+              >{link.label}</Link>
+            ))}
+            {!user && (
+              <Link href="/login" onClick={() => setMobileOpen(false)}
+                style={{ display: "block", marginTop: 16, padding: "12px", background: "#FF9900", color: "#111", fontWeight: 700, fontSize: 14, textAlign: "center", borderRadius: 8, textDecoration: "none" }}
+              >Sign In</Link>
+            )}
+          </div>
+        </div>
+      )}
     </>
   );
 };

@@ -34,8 +34,11 @@ export const getSellerNavItems = (): NavSection[] => [
         title: "Store",
         items: [
             { title: "My Products", href: "/seller/products", icon: "Package", roles: ["SELLER"] },
+            { title: "Add Product", href: "/seller/products/new", icon: "Plus", roles: ["SELLER"] },
             { title: "Orders", href: "/seller/orders", icon: "ShoppingBag", roles: ["SELLER"] },
             { title: "Analytics", href: "/seller/analytics", icon: "BarChart3", roles: ["SELLER"] },
+            { title: "Coupons", href: "/seller/coupons", icon: "Tag", roles: ["SELLER"] },
+            { title: "Payouts", href: "/seller/payouts", icon: "Wallet", roles: ["SELLER"] },
         ],
     },
     {
@@ -59,6 +62,7 @@ export const getAdminNavItems = (): NavSection[] => [
         items: [
             { title: "Users", href: "/admin/users", icon: "Users", roles: ["ADMIN"] },
             { title: "Products", href: "/admin/products", icon: "Package", roles: ["ADMIN"] },
+            { title: "Categories", href: "/admin/categories", icon: "Tag", roles: ["ADMIN"] },
             { title: "Transactions", href: "/admin/transactions", icon: "CreditCard", roles: ["ADMIN"] },
         ],
     },

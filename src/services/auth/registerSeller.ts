@@ -2,9 +2,6 @@
 
 import { redirect } from "next/navigation";
 import { setCookie } from "./tokenHandlers";
-import { zodValidator } from "@/lib/zodValidator";
-import { registerValidationZodSchema } from "@/zod/auth.validation";
-import { getDefaultDashboardRoute, UserRole } from "@/lib/auth-utils";
 
 const isProduction = process.env.NODE_ENV === "production";
 const API_URL = process.env.NEXT_PUBLIC_BASE_API_URL || "http://localhost:5000/api/v1";
@@ -12,38 +9,44 @@ const API_URL = process.env.NEXT_PUBLIC_BASE_API_URL || "http://localhost:5000/a
 const decodeTokenPayload = (token: string) => {
     const parts = token.split(".");
     if (parts.length < 2) throw new Error("Invalid token format");
-    return JSON.parse(Buffer.from(parts[1], "base64url").toString("utf-8")) as { role?: UserRole };
+    return JSON.parse(Buffer.from(parts[1], "base64url").toString("utf-8")) as { role?: string };
 };
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
-export const registerUser = async (_currentState: any, formData: FormData): Promise<any> => {
+export const registerSeller = async (_currentState: any, formData: FormData): Promise<any> => {
     try {
-        const name = formData.get("name") as string;
-        const email = formData.get("email") as string;
+        const name = (formData.get("name") as string)?.trim();
+        const email = (formData.get("email") as string)?.trim();
         const password = formData.get("password") as string;
         const confirmPassword = formData.get("confirmPassword") as string;
-        const role = (formData.get("role") as string) || "CUSTOMER";
+        const storeName = (formData.get("storeName") as string)?.trim();
+        const storeDescription = (formData.get("storeDescription") as string)?.trim();
+        const contactNumber = (formData.get("contactNumber") as string)?.trim();
+        const address = (formData.get("address") as string)?.trim();
 
-        const payload = { name, email, password, confirmPassword, role: role as "CUSTOMER" | "SELLER" | "ADMIN" };
+        if (!name) return { success: false, message: "Full name is required." };
+        if (!email) return { success: false, message: "Email is required." };
+        if (!password || password.length < 6) return { success: false, message: "Password must be at least 6 characters." };
+        if (password !== confirmPassword) return { success: false, message: "Passwords do not match." };
+        if (!storeName) return { success: false, message: "Store name is required." };
+        if (!contactNumber) return { success: false, message: "Contact number is required." };
 
-        const validation = zodValidator(payload, registerValidationZodSchema);
-        if (!validation.success) {
-            const firstError = Array.isArray(validation.errors)
-                ? validation.errors[0]?.message
-                : "Validation failed";
-            return { success: false, message: firstError };
-        }
+        const payload = {
+            password,
+            seller: {
+                name,
+                email,
+                storeName,
+                storeDescription: storeDescription || undefined,
+                contactNumber,
+                address: address || undefined,
+            },
+        };
 
-        const res = await fetch(`${API_URL}/auth/register`, {
+        const res = await fetch(`${API_URL}/user/create-seller`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                name: validation.data!.name,
-                email: validation.data!.email,
-                password: validation.data!.password,
-                confirmPassword: validation.data!.confirmPassword,
-                role: validation.data!.role || "CUSTOMER"
-            }),
+            body: JSON.stringify(payload),
         });
 
         const result = await res.json();
@@ -52,6 +55,7 @@ export const registerUser = async (_currentState: any, formData: FormData): Prom
             return { success: false, message: result.message || "Registration failed." };
         }
 
+        // Auto-login: if tokens returned, set cookies and redirect
         const accessToken = result?.data?.accessToken as string | undefined;
         const refreshToken = result?.data?.refreshToken as string | undefined;
 
@@ -72,18 +76,15 @@ export const registerUser = async (_currentState: any, formData: FormData): Prom
             });
 
             const decoded = decodeTokenPayload(accessToken);
-            const userRole = decoded.role;
-            if (userRole) {
-                redirect(getDefaultDashboardRoute(userRole));
+            if (decoded.role) {
+                redirect("/seller/dashboard");
             }
         }
 
-        return { success: true, message: "Registered successfully!" };
+        // Registration succeeded but no auto-login tokens — redirect to login
+        redirect("/login?registered=seller");
     } catch (error: any) {
-        // Next.js redirect throws - let it propagate
         if (error?.digest?.startsWith("NEXT_REDIRECT")) throw error;
         return { success: false, message: "Something went wrong during registration." };
     }
 };
-
-/* eslint-disable @typescript-eslint/no-explicit-any */
