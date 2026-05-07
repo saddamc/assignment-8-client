@@ -24,6 +24,7 @@ export default async function ProductsPage({
 }) {
   const params = await searchParams;
   const categoryId = params.categoryId || "";
+  const categorySlug = params.categorySlug || "";
   const brandId = params.brandId || "";
   const minPrice = params.minPrice || "";
   const maxPrice = params.maxPrice || "";
@@ -34,13 +35,36 @@ export default async function ProductsPage({
   const searchTerm = params.searchTerm || "";
   const page = params.page || "1";
 
+  // Fetch categories + brands first so we can resolve categorySlug → categoryId
+  let categories: Category[] = [];
+  let brands: Brand[] = [];
+  try {
+    const [categoriesRes, brandsRes] = await Promise.all([
+      serverFetch.get("/products/categories?limit=100"),
+      serverFetch.get("/products/brands?limit=100"),
+    ]);
+    const categoriesData = await categoriesRes.json();
+    const brandsData = await brandsRes.json();
+    if (categoriesData.success) categories = categoriesData.data || [];
+    if (brandsData.success) brands = brandsData.data || [];
+  } catch {}
+
+  // Resolve slug to ID when categorySlug is present and no direct categoryId
+  let resolvedCategoryId = categoryId;
+  if (categorySlug && !categoryId) {
+    const matched = categories.find(
+      (c) => c.slug?.toLowerCase() === categorySlug.toLowerCase()
+    );
+    if (matched) resolvedCategoryId = matched.id;
+  }
+
   const queryParts: string[] = [
     `page=${page}`,
     `limit=9`,
     `sortBy=${sortBy}`,
     `sortOrder=${sortOrder}`,
   ];
-  if (categoryId) queryParts.push(`categoryId=${categoryId}`);
+  if (resolvedCategoryId) queryParts.push(`categoryId=${resolvedCategoryId}`);
   if (brandId) queryParts.push(`brandId=${brandId}`);
   if (minPrice) queryParts.push(`minPrice=${minPrice}`);
   if (maxPrice) queryParts.push(`maxPrice=${maxPrice}`);
@@ -50,27 +74,19 @@ export default async function ProductsPage({
 
   let products: unknown[] = [];
   let total = 0;
-  let categories: Category[] = [];
-  let brands: Brand[] = [];
 
   try {
-    const [productsRes, categoriesRes, brandsRes] = await Promise.all([
-      serverFetch.get(`/products?${queryParts.join("&")}`),
-      serverFetch.get("/products/categories?limit=100"),
-      serverFetch.get("/products/brands?limit=100"),
-    ]);
+    const productsRes = await serverFetch.get(`/products?${queryParts.join("&")}`);
     const productsData = await productsRes.json();
-    const categoriesData = await categoriesRes.json();
-    const brandsData = await brandsRes.json();
     if (productsData.success) {
       products = productsData.data || [];
       total = productsData.meta?.total || 0;
     }
-    if (categoriesData.success) categories = categoriesData.data || [];
-    if (brandsData.success) brands = brandsData.data || [];
   } catch {
     console.error("Failed to fetch products");
   }
+
+  const activeCategory = categories.find((c) => c.id === resolvedCategoryId);
 
   return (
     <div className="min-h-screen bg-white flex flex-col">
@@ -79,7 +95,9 @@ export default async function ProductsPage({
         {/* Header */}
         <div className="mb-10">
           <p className="text-xs font-bold text-zinc-400 uppercase tracking-widest mb-2">Shop</p>
-          <h1 className="text-4xl md:text-5xl font-serif font-bold tracking-tight">All Products</h1>
+          <h1 className="text-4xl md:text-5xl font-serif font-bold tracking-tight">
+            {activeCategory ? activeCategory.name : "All Products"}
+          </h1>
           <p className="text-zinc-500 mt-3 max-w-xl">{total} products available</p>
         </div>
         <ProductsClient
@@ -88,7 +106,7 @@ export default async function ProductsPage({
           brands={brands}
           total={total}
           currentPage={parseInt(page)}
-          currentParams={{ categoryId, brandId, minPrice, maxPrice, minRating, inStock, sortBy, sortOrder, searchTerm }}
+          currentParams={{ categoryId: resolvedCategoryId, brandId, minPrice, maxPrice, minRating, inStock, sortBy, sortOrder, searchTerm }}
         />
       </main>
       <Footer />

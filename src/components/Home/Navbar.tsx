@@ -5,7 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import {
-  Search, ShoppingCart, User, Menu, X,
+  Search, ShoppingCart, Menu, X,
   ChevronDown, MapPin, LayoutDashboard, Package,
   Settings, LogOut, Store, Shield,
 } from "lucide-react";
@@ -15,22 +15,45 @@ import { logoutUser } from "@/services/auth/logoutUser";
 import type { AuthUser } from "@/hooks/useAuthStore";
 
 const CAT_LINKS = [
-  { label: "All", href: "/products" },
   { label: "Today's Deals", href: "/products?sale=true" },
   { label: "New Arrivals", href: "/new-arrivals" },
-  { label: "Best Sellers", href: "/products?sort=popular" },
+  { label: "Best Sellers", href: "/products?sortBy=rating&sortOrder=desc" },
   { label: "Collections", href: "/collections" },
-  { label: "Electronics", href: "/products?cat=electronics" },
-  { label: "Fashion", href: "/products?cat=fashion" },
-  { label: "Home & Living", href: "/products?cat=home" },
-  { label: "Sports", href: "/products?cat=sports" },
-  { label: "Gift Cards", href: "/products?cat=gifts" },
+  { label: "Electronics", href: "/products?categorySlug=electronics" },
+  { label: "Fashion", href: "/products?categorySlug=fashion" },
+  { label: "Home & Living", href: "/products?categorySlug=home-living" },
+  { label: "Sports", href: "/products?categorySlug=sports" },
+  { label: "Gift Cards", href: "/products?categorySlug=gifts" },
+];
+
+const ALL_DEPT_CATS = [
+  { label: "All Products", href: "/products", icon: "🛍️" },
+  { label: "Electronics", href: "/products?categorySlug=electronics", icon: "🔌" },
+  { label: "Fashion", href: "/products?categorySlug=fashion", icon: "👗" },
+  { label: "Home & Living", href: "/products?categorySlug=home-living", icon: "🏠" },
+  { label: "Sports & Outdoors", href: "/products?categorySlug=sports", icon: "⚽" },
+  { label: "Books", href: "/products?categorySlug=books", icon: "📚" },
+  { label: "Toys & Games", href: "/products?categorySlug=toys", icon: "🧸" },
+  { label: "Beauty & Care", href: "/products?categorySlug=beauty", icon: "💄" },
+  { label: "Automotive", href: "/products?categorySlug=automotive", icon: "🚗" },
+  { label: "Today's Deals", href: "/products?sale=true", icon: "🏷️" },
 ];
 
 const SEARCH_CATS = [
   "All Departments", "Electronics", "Fashion", "Home & Living",
   "Sports", "Books", "Toys", "Beauty", "Automotive",
 ];
+
+const SEARCH_CAT_SLUGS: Record<string, string> = {
+  "Electronics": "electronics",
+  "Fashion": "fashion",
+  "Home & Living": "home-living",
+  "Sports": "sports",
+  "Books": "books",
+  "Toys": "toys",
+  "Beauty": "beauty",
+  "Automotive": "automotive",
+};
 
 function dashRoute(role: AuthUser["role"]) {
   if (role === "ADMIN") return "/admin/dashboard";
@@ -130,16 +153,27 @@ const Navbar = () => {
   const [searchCat, setSearchCat] = useState("All Departments");
   const [searchQuery, setSearchQuery] = useState("");
   const [catOpen, setCatOpen] = useState(false);
+  const [allDeptOpen, setAllDeptOpen] = useState(false);
+  const [visible, setVisible] = useState(true);
   const catRef = useRef<HTMLDivElement>(null);
+  const allDeptRef = useRef<HTMLDivElement>(null);
+  const lastScrollY = useRef(0);
   const router = useRouter();
-  // suppress unused-var warning
-  const _openMenu = useCallback(() => {}, []);
-  void _openMenu;
 
   const itemCount = useCartStore((s) => s.getItemCount());
   const user = useAuthStore((s) => s.user);
 
   useEffect(() => { setMounted(true); }, []);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const y = window.scrollY;
+      setVisible(y <= 10 || y < lastScrollY.current);
+      lastScrollY.current = y;
+    };
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   useEffect(() => {
     const fn = (e: MouseEvent) => {
@@ -149,12 +183,22 @@ const Navbar = () => {
     return () => document.removeEventListener("mousedown", fn);
   }, []);
 
+  useEffect(() => {
+    const fn = (e: MouseEvent) => {
+      if (allDeptRef.current && !allDeptRef.current.contains(e.target as Node)) setAllDeptOpen(false);
+    };
+    document.addEventListener("mousedown", fn);
+    return () => document.removeEventListener("mousedown", fn);
+  }, []);
+
   const handleSearch = useCallback((e: React.FormEvent) => {
     e.preventDefault();
-    if (searchQuery.trim()) {
-      router.push(`/products?searchTerm=${encodeURIComponent(searchQuery.trim())}`);
-    }
-  }, [searchQuery, router]);
+    if (!searchQuery.trim()) return;
+    const p = new URLSearchParams({ searchTerm: searchQuery.trim() });
+    const slug = SEARCH_CAT_SLUGS[searchCat];
+    if (slug) p.set("categorySlug", slug);
+    router.push(`/products?${p.toString()}`);
+  }, [searchQuery, searchCat, router]);
 
   return (
     <>
@@ -216,7 +260,7 @@ const Navbar = () => {
         }
       `}</style>
 
-      <header style={{ position: "sticky", top: 0, zIndex: 100, background: "#131921", boxShadow: "0 2px 8px rgba(0,0,0,0.4)", fontFamily: "Arial, sans-serif" }}>
+      <header style={{ position: "sticky", top: 0, zIndex: 100, background: "#131921", boxShadow: "0 2px 8px rgba(0,0,0,0.4)", fontFamily: "Arial, sans-serif", transform: visible ? "translateY(0)" : "translateY(-100%)", transition: "transform 0.25s ease" }}>
         {/* Top bar */}
         <div style={{ maxWidth: 1400, margin: "0 auto", padding: "8px 16px", display: "flex", alignItems: "center", gap: 8 }}>
           {/* Logo */}
@@ -305,11 +349,46 @@ const Navbar = () => {
         {/* Category nav */}
         <nav className="hz-nav-catnav">
           <div style={{ maxWidth: 1400, margin: "0 auto", padding: "0 16px", display: "flex", alignItems: "center" }}>
-            {CAT_LINKS.map((link) => (
-              <Link key={link.href} href={link.href} className="hz-nav-link-pill"
-                style={link.label === "All" ? { fontWeight: 700, gap: 5 } : {}}
+            {/* All Departments dropdown */}
+            <div ref={allDeptRef} style={{ position: "relative", flexShrink: 0 }}>
+              <button
+                type="button"
+                onClick={() => setAllDeptOpen((v) => !v)}
+                className="hz-nav-link-pill"
+                style={{ fontWeight: 700, gap: 5, background: allDeptOpen ? "rgba(255,255,255,0.12)" : "transparent", borderColor: allDeptOpen ? "#fff" : "transparent" }}
               >
-                {link.label === "All" && <Menu size={14} />}
+                <Menu size={14} /> All Departments <ChevronDown size={10} />
+              </button>
+              {allDeptOpen && (
+                <div style={{
+                  position: "absolute", top: "calc(100% + 4px)", left: 0,
+                  width: 232, background: "#fff", border: "1px solid #ddd",
+                  borderRadius: 8, boxShadow: "0 8px 32px rgba(0,0,0,0.18)", zIndex: 200,
+                  overflow: "hidden",
+                }}>
+                  {ALL_DEPT_CATS.map((cat) => (
+                    <Link
+                      key={cat.href}
+                      href={cat.href}
+                      onClick={() => setAllDeptOpen(false)}
+                      style={{
+                        display: "flex", alignItems: "center", gap: 10,
+                        padding: "9px 14px", fontSize: 13, color: "#222",
+                        textDecoration: "none", borderBottom: "1px solid #f2f2f2",
+                        transition: "background 0.1s",
+                      }}
+                      onMouseEnter={(e) => (e.currentTarget.style.background = "#f5f5f5")}
+                      onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+                    >
+                      <span style={{ fontSize: 16, lineHeight: 1 }}>{cat.icon}</span>
+                      {cat.label}
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
+            {CAT_LINKS.map((link) => (
+              <Link key={link.href} href={link.href} className="hz-nav-link-pill">
                 {link.label}
               </Link>
             ))}
