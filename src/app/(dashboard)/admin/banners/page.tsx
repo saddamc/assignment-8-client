@@ -1,5 +1,6 @@
 import { serverFetch } from "@/lib/server-fetch";
 import { Image as ImageIcon, Plus } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 
 type Banner = {
@@ -45,7 +46,7 @@ export default async function AdminBannersPage() {
           {banners.map((banner) => (
             <div key={banner.id} className="bg-white rounded-2xl border border-zinc-100 shadow-sm overflow-hidden flex items-center gap-6 p-4">
               {banner.imageUrl && (
-                <img src={banner.imageUrl} alt={banner.title} className="w-32 h-20 object-cover rounded-xl flex-shrink-0" />
+                <Image src={banner.imageUrl} alt={banner.title} width={128} height={80} className="object-cover rounded-xl flex-shrink-0" />
               )}
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-1">

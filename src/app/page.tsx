@@ -99,7 +99,11 @@ function ProductCard({ product, index }: { product: any; index: number }) {
             </div>
           )}
           {product.images?.[0] ? (
-            <Image src={product.images[0]} alt={product.name} fill style={{ objectFit: "contain", padding: "8px" }} />
+            //! ok
+            <Image src={product.images[0]} alt={product.name} fill  
+              sizes="(max-width: 640px) 50vw,
+              (max-width: 1024px) 33vw, 25vw" 
+              className="object-cover" />
           ) : (
             <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", color: "#bbb", fontSize: 13, textAlign: "center", padding: 12 }}>
               {product.name}
@@ -143,9 +147,9 @@ function ProductCard({ product, index }: { product: any; index: number }) {
             {product.stock > 0 ? `In Stock` : "Out of Stock"}
           </p>
 
-          <p style={{ fontSize: 11, color: "#555", marginTop: 2 }}>
+          {/* <p style={{ fontSize: 11, color: "#555", marginTop: 2 }}>
             FREE delivery <span style={{ fontWeight: 700 }}>Tomorrow</span>
-          </p>
+          </p> */}
         </div>
       </div>
     </Link>

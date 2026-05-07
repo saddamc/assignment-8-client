@@ -12,6 +12,7 @@ import {
   Check, Tag, Package, DollarSign, Image as ImageIcon, Settings, Search,
 } from "lucide-react";
 import { clientFetch } from "@/lib/client-fetch";
+import Image from "next/image";
 
 interface Category { id: string; name: string }
 interface Brand    { id: string; name: string }
@@ -453,7 +454,7 @@ export default function EditProductForm({
                   {existingImages.map((src, i) => (
                     <div key={src} className="relative aspect-square rounded-xl overflow-hidden border border-zinc-200 group">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={src} alt={`Image ${i + 1}`} className="w-full h-full object-cover" />
+                      <Image src={src} alt={`Image ${i + 1}`} className="w-full h-full object-cover" />
                       {i === 0 && (
                         <div className="absolute bottom-0 left-0 right-0 bg-indigo-600/80 text-white text-xs text-center py-1">Cover</div>
                       )}
@@ -492,8 +493,7 @@ export default function EditProductForm({
                   <div className="grid grid-cols-3 sm:grid-cols-5 gap-3 mt-3">
                     {newPreviews.map((src, i) => (
                       <div key={i} className="relative aspect-square rounded-xl overflow-hidden border border-zinc-200 group">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={src} alt={`New ${i + 1}`} className="w-full h-full object-cover" />
+                        <Image src={src} alt={`New ${i + 1}`} sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw" className="object-cover" />
                         <div className="absolute bottom-0 left-0 right-0 bg-amber-500/80 text-white text-xs text-center py-1">New</div>
                         <button
                           type="button"

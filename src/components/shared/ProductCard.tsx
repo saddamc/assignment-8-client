@@ -2,6 +2,7 @@ import React from 'react';
 import { Star, Heart, ShoppingCart } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import Image from 'next/image';
 
 interface ProductCardProps {
   id: string;
@@ -44,10 +45,12 @@ const ProductCard: React.FC<ProductCardProps> = ({
     <div className="group relative bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 flex flex-col h-full">
       {/* Image Container */}
       <div className="relative w-full aspect-square bg-neutral-100 overflow-hidden">
-        <img
+        <Image
           src={image}
           alt={title}
-          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+          sizes="(max-width: 640px) 50vw,
+              (max-width: 1024px) 33vw, 25vw"
+          className="object-cover group-hover:scale-110 transition-transform duration-300"
         />
         
         {/* Badge */}

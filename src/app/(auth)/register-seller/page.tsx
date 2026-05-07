@@ -25,15 +25,10 @@ export default function RegisterSellerPage() {
       <div className="w-full max-w-lg space-y-8 bg-white p-8 rounded-3xl shadow-xl border">
         {/* Header */}
         <div className="text-center">
-          <div className="flex items-center justify-center gap-2 mb-4">
-            <Image
-              src="/logo.png"
-              alt="Cabro"
-              width={40}
-              height={40}
-              className="h-10 w-10 object-contain rounded-full"
-            />
-            <h1 className="text-[#FF6600] font-bold text-2xl">ABRO</h1>
+          <div className="flex items-center justify-center">
+            <Link href="/" >
+              <Image src="/logo.png" alt="Cabro" width={120} height={120}  priority className="object-contain" />
+            </Link>
           </div>
           <div className="flex items-center justify-center gap-2 mb-2">
             <Store className="h-5 w-5 text-[#FF6600]" />

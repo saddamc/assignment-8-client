@@ -12,6 +12,7 @@ import {
   Check, Tag, Package, DollarSign, Image as ImageIcon, Settings, Search,
 } from "lucide-react";
 import { clientFetch } from "@/lib/client-fetch";
+import Image from "next/image";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -535,7 +536,8 @@ export default function NewProductForm({
                     className="relative aspect-square rounded-xl overflow-hidden border border-zinc-200 group"
                   >
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={src} alt={`Preview ${i + 1}`} className="w-full h-full object-cover" />
+                    <Image src={src} alt={`Preview ${i + 1}`} fill
+                    sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw" className=" object-cover" />
                     {i === 0 && (
                       <div className="absolute bottom-0 left-0 right-0 bg-indigo-600/80 text-white text-xs text-center py-1">
                         Cover

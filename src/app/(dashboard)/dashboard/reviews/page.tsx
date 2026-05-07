@@ -1,5 +1,6 @@
 import { serverFetch } from "@/lib/server-fetch";
 import { Star, MessageSquare } from "lucide-react";
+import Image from "next/image";
 
 type Review = {
   id: string;
@@ -39,7 +40,7 @@ export default async function MyReviewsPage() {
             <div key={review.id} className="bg-white rounded-2xl border border-zinc-100 shadow-sm p-6">
               <div className="flex items-start gap-4">
                 {review.product?.images?.[0] && (
-                  <img src={review.product.images[0]} alt={review.product.name} className="w-16 h-16 rounded-xl object-cover flex-shrink-0" />
+                  <Image src={review.product.images[0]} alt={review.product.name} width={64} height={64} className="rounded-xl object-cover flex-shrink-0"  />
                 )}
                 <div className="flex-1">
                   <p className="font-semibold">{review.product?.name}</p>

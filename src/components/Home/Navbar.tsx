@@ -262,15 +262,11 @@ const Navbar = () => {
 
       <header style={{ position: "sticky", top: 0, zIndex: 100, background: "#131921", boxShadow: "0 2px 8px rgba(0,0,0,0.4)", fontFamily: "Arial, sans-serif", transform: visible ? "translateY(0)" : "translateY(-100%)", transition: "transform 0.25s ease" }}>
         {/* Top bar */}
-        <div style={{ maxWidth: 1400, margin: "0 auto", padding: "8px 16px", display: "flex", alignItems: "center", gap: 8 }}>
+        <div style={{ maxWidth: 1400, margin: "0 auto", padding: "0 16px", display: "flex", alignItems: "center", gap: 8 }}>
           {/* Logo */}
-          <Link href="/" style={{ display: "flex", alignItems: "center", gap: 4, textDecoration: "none", flexShrink: 0 }}
-            className="hz-top-action"
-          >
-            <Image src="/logo.png" alt="Cabro" width={28} height={28} style={{ objectFit: "contain" }} />
-            <span style={{ color: "#FF9900", fontWeight: 800, fontSize: 20 }}>ABRO</span>
-            <span style={{ color: "#ccc", fontSize: 9, alignSelf: "flex-end", marginBottom: 2 }}>.com</span>
-          </Link>
+          <Link href="/" >
+              <Image src="/logo.png" alt="Cabro" width={100} height={100}  priority className="object-contain" />
+            </Link>
 
           {/* Deliver to */}
           <div className="hz-top-action hz-desktop-only" style={{ flexShrink: 0 }}>

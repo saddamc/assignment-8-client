@@ -2,6 +2,7 @@ import React from 'react';
 import { X, Minus, Plus, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import Image from 'next/image';
 
 interface CartItem {
   id: string;
@@ -59,10 +60,12 @@ const Cart: React.FC<CartProps> = ({
             >
               {/* Image */}
               <div className="w-20 h-20 md:w-24 md:h-24 flex-shrink-0 bg-neutral-100 rounded-lg overflow-hidden">
-                <img
+                <Image
                   src={item.image}
                   alt={item.title}
-                  className="w-full h-full object-cover"
+                  sizes="(max-width: 640px) 50vw,
+                    (max-width: 1024px) 33vw, 25vw"
+                  className="object-cover"
                 />
               </div>
 

@@ -24,10 +24,9 @@ const DashboardSidebarContent = ({ user, navItems, dashboardHome }: DashboardSid
         <div className="hidden md:flex h-full w-64 flex-col border-r bg-card">
             {/* Logo/Brand */}
             <div className="flex h-16 items-center border-b px-6">
-                <Link href={dashboardHome} className="flex items-center gap-2">
-                    <Image src="/logo.png" alt="Cabro" width={32} height={32} className="h-8 w-8 object-contain" />
-                    <h1 className="text-[#FF6600] font-bold text-2xl">ABRO</h1>
-                </Link>
+                <Link href="/" >
+                <Image src="/logo.png" alt="Cabro" width={120} height={120}  priority className="object-contain" />
+            </Link>
             </div>
 
             {/* Navigation */}

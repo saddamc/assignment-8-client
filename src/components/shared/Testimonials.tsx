@@ -1,5 +1,6 @@
 import React from 'react';
 import { Star, Quote } from 'lucide-react';
+import Image from 'next/image';
 
 interface Testimonial {
   id: string;
@@ -44,7 +45,7 @@ const Testimonials: React.FC<TestimonialsProps> = ({ testimonials }) => {
           {/* Author */}
           <div className="flex items-center gap-3 pt-4 border-t border-neutral-200">
             {testimonial.avatar && (
-              <img
+              <Image
                 src={testimonial.avatar}
                 alt={testimonial.name}
                 className="w-10 h-10 rounded-full object-cover"

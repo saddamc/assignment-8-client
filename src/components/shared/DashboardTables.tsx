@@ -3,6 +3,7 @@ import { ChevronRight, Eye, Edit, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
+import Image from 'next/image';
 
 interface Order {
   id: string;
@@ -222,7 +223,7 @@ const ProductsTable: React.FC<ProductsTableProps> = ({
             >
               <td className="px-4 md:px-6 py-4">
                 <div className="flex items-center gap-3">
-                  <img
+                  <Image
                     src={product.image}
                     alt={product.name}
                     className="w-10 h-10 rounded object-cover"

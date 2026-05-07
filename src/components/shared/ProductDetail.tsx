@@ -2,6 +2,7 @@ import React from 'react';
 import { Star, Minus, Plus, Heart, Share2, Truck, Shield, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import Image from 'next/image';
 
 interface ProductImage {
   id: string;
@@ -52,11 +53,13 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({ images }) => {
         onMouseLeave={() => setIsZoomed(false)}
         onMouseMove={handleMouseMove}
       >
-        <img
+        <Image
           src={images[selectedIndex]?.url}
           alt={images[selectedIndex]?.alt || 'Product'}
+          sizes="(max-width: 640px) 50vw,
+              (max-width: 1024px) 33vw, 25vw" fill
           className={cn(
-            'w-full h-full object-cover transition-transform duration-300',
+            'object-cover transition-transform duration-300',
             isZoomed ? 'scale-200 cursor-zoom-out' : ''
           )}
           style={isZoomed ? { transformOrigin: `${zoom.x}% ${zoom.y}%` } : {}}
@@ -79,10 +82,12 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({ images }) => {
                 : 'border-neutral-200 hover:border-neutral-300'
             )}
           >
-            <img
+            <Image
               src={image.url}
               alt={image.alt || `Thumbnail ${index + 1}`}
-              className="w-full h-full object-cover"
+              sizes="(max-width: 640px) 50vw,
+              (max-width: 1024px) 33vw, 25vw" fill
+              className="object-cover"
             />
           </button>
         ))}
