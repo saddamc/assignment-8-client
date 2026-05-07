@@ -370,7 +370,7 @@ export default function ProductsClient({
               <h2 className="text-lg font-bold">Filters</h2>
               <button onClick={() => setMobileFiltersOpen(false)}><X className="w-5 h-5" /></button>
             </div>
-            <FilterSidebar />
+            {FilterSidebar()}
           </div>
         </div>
       )}
@@ -383,7 +383,7 @@ export default function ProductsClient({
               <SlidersHorizontal className="w-4 h-4 text-zinc-400" />
               <h2 className="text-sm font-bold uppercase tracking-widest text-zinc-400">Filters</h2>
             </div>
-            <FilterSidebar />
+            {FilterSidebar()}
           </div>
         </aside>
 
@@ -480,7 +480,7 @@ export default function ProductsClient({
                           </div>
                         )}
                         {product.images?.[0] ? (
-                          <Image src={product.images[0]} alt={product.name} fill className="object-cover transition-transform duration-700 group-hover:scale-110" />
+                          <Image src={product.images[0]} alt={product.name} fill sizes="(max-width: 640px) 100vw, (max-width: 1280px) 50vw, 33vw" className="object-cover transition-transform duration-700 group-hover:scale-110" />
                         ) : (
                           <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-zinc-200 to-zinc-300 text-zinc-500 text-sm font-medium px-4 text-center">
                             {product.name}

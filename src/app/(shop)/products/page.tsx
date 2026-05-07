@@ -63,8 +63,8 @@ export default async function ProductsPage({
     const categoriesData = await categoriesRes.json();
     const brandsData = await brandsRes.json();
     if (productsData.success) {
-      products = productsData.data?.data || productsData.data || [];
-      total = productsData.meta?.total || productsData.data?.meta?.total || 0;
+      products = productsData.data || [];
+      total = productsData.meta?.total || 0;
     }
     if (categoriesData.success) categories = categoriesData.data || [];
     if (brandsData.success) brands = brandsData.data || [];

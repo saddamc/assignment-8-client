@@ -9,7 +9,7 @@ async function getFeaturedProducts() {
   try {
     const res = await serverFetch.get("/products?limit=8&sortBy=createdAt&sortOrder=desc");
     const data = await res.json();
-    if (data.success) return data.data.data || [];
+    if (data.success) return data.data || [];
   } catch {}
   return [];
 }

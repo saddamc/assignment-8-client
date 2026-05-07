@@ -1,28 +1,40 @@
 import { serverFetch } from "@/lib/server-fetch";
 import Image from "next/image";
-import Link from "next/link";
 import { Package } from "lucide-react";
+import AdminProductActions from "./AdminProductActions";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Product = any;
 
+const STATUS_STYLES: Record<string, string> = {
+  DRAFT:     "bg-zinc-100 text-zinc-500",
+  PENDING:   "bg-amber-100 text-amber-700",
+  PUBLISHED: "bg-emerald-100 text-emerald-700",
+  REJECTED:  "bg-red-100 text-red-700",
+  DISABLED:  "bg-zinc-700 text-white",
+};
+
+const STATUS_TABS = ["ALL", "PENDING", "PUBLISHED", "DRAFT", "REJECTED", "DISABLED"];
+
 export default async function AdminProductsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ page?: string; searchTerm?: string }>;
+  searchParams: Promise<{ page?: string; searchTerm?: string; status?: string }>;
 }) {
   const params = await searchParams;
   const page = params.page || "1";
   const searchTerm = params.searchTerm || "";
+  const status = params.status || "ALL";
 
   let products: Product[] = [];
   let total = 0;
 
   const qs = [`page=${page}`, "limit=20"];
   if (searchTerm) qs.push(`searchTerm=${encodeURIComponent(searchTerm)}`);
+  if (status && status !== "ALL") qs.push(`status=${status}`);
 
   try {
-    const res = await serverFetch.get(`/products?${qs.join("&")}`);
+    const res = await serverFetch.get(`/products/admin/all?${qs.join("&")}`);
     const data = await res.json();
     if (data.success) {
       products = data.data || [];
@@ -43,6 +55,7 @@ export default async function AdminProductsPage({
 
         {/* Search */}
         <form method="get" className="flex items-center gap-2">
+          {status !== "ALL" && <input type="hidden" name="status" value={status} />}
           <input
             type="text"
             name="searchTerm"
@@ -57,6 +70,23 @@ export default async function AdminProductsPage({
             Search
           </button>
         </form>
+      </div>
+
+      {/* Status tabs */}
+      <div className="flex gap-2 flex-wrap">
+        {STATUS_TABS.map((s) => (
+          <a
+            key={s}
+            href={`/admin/products?status=${s}&searchTerm=${searchTerm}`}
+            className={`px-4 py-2 rounded-xl text-sm font-bold transition-colors ${
+              status === s
+                ? "bg-indigo-600 text-white"
+                : "bg-white border border-zinc-200 text-zinc-600 hover:bg-zinc-50"
+            }`}
+          >
+            {s}
+          </a>
+        ))}
       </div>
 
       {products.length === 0 ? (
@@ -74,7 +104,7 @@ export default async function AdminProductsPage({
                   <th className="px-6 py-4">Seller</th>
                   <th className="px-6 py-4">Price</th>
                   <th className="px-6 py-4">Stock</th>
-                  <th className="px-6 py-4">Category</th>
+                  <th className="px-6 py-4">Status</th>
                   <th className="px-6 py-4">Actions</th>
                 </tr>
               </thead>
@@ -92,6 +122,7 @@ export default async function AdminProductsPage({
                               src={product.images[0]}
                               alt={product.name}
                               fill
+                              sizes="48px"
                               className="object-cover"
                             />
                           ) : (
@@ -109,9 +140,8 @@ export default async function AdminProductsPage({
                       </div>
                     </td>
                     <td className="px-6 py-4 text-zinc-600 text-xs">
-                      {product.seller?.storeName ||
-                        product.seller?.name ||
-                        "Unknown"}
+                      <div className="font-medium">{product.seller?.storeName || product.seller?.name || "Unknown"}</div>
+                      <div className="text-zinc-400">{product.seller?.email}</div>
                     </td>
                     <td className="px-6 py-4 font-bold">
                       ${(product.price || 0).toFixed(2)}
@@ -127,16 +157,16 @@ export default async function AdminProductsPage({
                         {product.stock ?? "—"}
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-zinc-500 text-xs">
-                      {product.category?.name || "—"}
+                    <td className="px-6 py-4">
+                      <span className={`px-2 py-1 rounded-lg text-xs font-bold ${STATUS_STYLES[product.status] || "bg-zinc-100 text-zinc-500"}`}>
+                        {product.status}
+                      </span>
                     </td>
                     <td className="px-6 py-4">
-                      <Link
-                        href={`/products/${product.id}`}
-                        className="text-xs font-semibold text-indigo-600 hover:underline"
-                      >
-                        View
-                      </Link>
+                      <AdminProductActions
+                        productId={product.id}
+                        productStatus={product.status}
+                      />
                     </td>
                   </tr>
                 ))}
@@ -152,7 +182,7 @@ export default async function AdminProductsPage({
             <div className="flex gap-2">
               {Number(page) > 1 && (
                 <a
-                  href={`/admin/products?page=${Number(page) - 1}&searchTerm=${searchTerm}`}
+                  href={`/admin/products?page=${Number(page) - 1}&searchTerm=${searchTerm}&status=${status}`}
                   className="px-4 py-2 rounded-lg border text-sm font-medium hover:bg-white transition-colors"
                 >
                   Previous
@@ -160,7 +190,7 @@ export default async function AdminProductsPage({
               )}
               {products.length === 20 && (
                 <a
-                  href={`/admin/products?page=${Number(page) + 1}&searchTerm=${searchTerm}`}
+                  href={`/admin/products?page=${Number(page) + 1}&searchTerm=${searchTerm}&status=${status}`}
                   className="px-4 py-2 rounded-lg border text-sm font-medium hover:bg-white transition-colors"
                 >
                   Next
