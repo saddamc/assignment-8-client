@@ -7,6 +7,7 @@ import {
   Package,
   BarChart3,
   Settings,
+  User,
   LogOut,
   Menu,
   X,
@@ -34,7 +35,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ role, onLogout }) =
       { label: 'Dashboard', href: '/dashboard', icon: <LayoutDashboard size={18} /> },
       { label: 'My Orders', href: '/dashboard/orders', icon: <ShoppingBag size={18} /> },
       { label: 'Wishlist', href: '/dashboard/wishlist', icon: <Package size={18} /> },
-      { label: 'Settings', href: '/dashboard/settings', icon: <Settings size={18} /> },
+      { label: 'My Profile', href: '/dashboard/my-profile', icon: <User size={18} /> },
     ],
     seller: [
       { label: 'Dashboard', href: '/seller', icon: <LayoutDashboard size={18} /> },

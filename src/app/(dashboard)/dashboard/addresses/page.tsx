@@ -1,6 +1,8 @@
 import { serverFetch } from "@/lib/server-fetch";
 import { MapPin, Plus } from "lucide-react";
 import Link from "next/link";
+import { getCurrentUser } from "@/services/auth/getCurrentUser";
+import { redirect } from "next/navigation";
 
 type Address = {
   id: string;
@@ -17,6 +19,13 @@ type Address = {
 };
 
 export default async function AddressesPage() {
+  const user = await getCurrentUser();
+
+  // Only customers can have addresses
+  if (!user || user.role !== "CUSTOMER") {
+    redirect("/dashboard");
+  }
+
   let addresses: Address[] = [];
 
   try {

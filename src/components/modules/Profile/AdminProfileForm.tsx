@@ -48,6 +48,7 @@ export function AdminProfileForm({
     register,
     handleSubmit,
     formState: { errors },
+    reset,
   } = useForm<AdminProfileFormData>({
     resolver: zodResolver(adminProfileSchema),
     defaultValues: {
@@ -101,6 +102,11 @@ export function AdminProfileForm({
         toast.success('Admin profile updated successfully!');
         setImageFile(null);
         if (response.data?.profilePhoto) setProfileImage(response.data.profilePhoto);
+        reset({
+          name: response.data?.name ?? data.name,
+          contactNumber: response.data?.contactNumber ?? data.contactNumber,
+          bio: response.data?.bio ?? data.bio,
+        });
         onSuccess?.();
       } else {
         toast.error(response.message || 'Failed to update profile');

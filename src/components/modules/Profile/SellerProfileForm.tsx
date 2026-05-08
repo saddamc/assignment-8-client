@@ -54,6 +54,7 @@ export function SellerProfileForm({
     register,
     handleSubmit,
     formState: { errors },
+    reset,
   } = useForm<SellerProfileFormData>({
     resolver: zodResolver(sellerProfileSchema),
     defaultValues: {
@@ -110,6 +111,14 @@ export function SellerProfileForm({
         toast.success('Store profile updated successfully!');
         setImageFile(null);
         if (response.data?.profilePhoto) setProfileImage(response.data.profilePhoto);
+        reset({
+          name: response.data?.name ?? data.name,
+          storeName: response.data?.storeName ?? data.storeName,
+          storeDescription: response.data?.storeDescription ?? data.storeDescription,
+          contactNumber: response.data?.contactNumber ?? data.contactNumber,
+          address: response.data?.address ?? data.address,
+          bio: response.data?.bio ?? data.bio,
+        });
         onSuccess?.();
       } else {
         toast.error(response.message || 'Failed to update profile');

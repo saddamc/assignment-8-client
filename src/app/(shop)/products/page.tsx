@@ -28,6 +28,7 @@ export default async function ProductsPage({
   const brandId = params.brandId || "";
   const minPrice = params.minPrice || "";
   const maxPrice = params.maxPrice || "";
+  const priceRanges = params.priceRanges || "";
   const minRating = params.minRating || "";
   const inStock = params.inStock || "";
   const sortBy = params.sortBy || "createdAt";
@@ -68,6 +69,7 @@ export default async function ProductsPage({
   if (brandId) queryParts.push(`brandId=${brandId}`);
   if (minPrice) queryParts.push(`minPrice=${minPrice}`);
   if (maxPrice) queryParts.push(`maxPrice=${maxPrice}`);
+  if (priceRanges) queryParts.push(`priceRanges=${encodeURIComponent(priceRanges)}`);
   if (minRating) queryParts.push(`minRating=${minRating}`);
   if (inStock) queryParts.push(`inStock=${inStock}`);
   if (searchTerm) queryParts.push(`searchTerm=${encodeURIComponent(searchTerm)}`);
@@ -106,7 +108,18 @@ export default async function ProductsPage({
           brands={brands}
           total={total}
           currentPage={parseInt(page)}
-          currentParams={{ categoryId: resolvedCategoryId, brandId, minPrice, maxPrice, minRating, inStock, sortBy, sortOrder, searchTerm }}
+          currentParams={{
+            categoryIds: resolvedCategoryId ? [resolvedCategoryId] : [],
+            brandIds: brandId ? [brandId] : [],
+            minPrice,
+            maxPrice,
+            priceRanges,
+            minRating,
+            inStock,
+            sortBy,
+            sortOrder,
+            searchTerm,
+          }}
         />
       </main>
       <Footer />

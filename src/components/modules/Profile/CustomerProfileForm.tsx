@@ -108,6 +108,12 @@ export function CustomerProfileForm({
         toast.success('Profile updated successfully!');
         setImageFile(null);
         if (response.data?.profilePhoto) setProfileImage(response.data.profilePhoto);
+        reset({
+          name: response.data?.name ?? data.name,
+          contactNumber: response.data?.contactNumber ?? data.contactNumber,
+          address: response.data?.address ?? data.address,
+          bio: response.data?.bio ?? data.bio,
+        });
         onSuccess?.();
       } else {
         toast.error(response.message || 'Failed to update profile');

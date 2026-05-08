@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 
 const FOOTER_COL = [
@@ -87,11 +88,10 @@ export default function Footer() {
         <div style={{ borderTop: "1px solid rgba(255,255,255,0.08)", maxWidth: 1200, margin: "0 auto" }} />
 
         {/* Logo row */}
-        <div style={{ maxWidth: 1200, margin: "0 auto", padding: "20px 24px", display: "flex", alignItems: "center", justifyContent: "center", gap: 16 }}>
-          <Link href="/" style={{ display: "flex", alignItems: "center", gap: 6, textDecoration: "none" }}>
-            <span style={{ color: "#FF9900", fontWeight: 800, fontSize: 22 }}>ABRO</span>
-            <span style={{ color: "#aaa", fontSize: 10 }}>.com</span>
-          </Link>
+        <div style={{ maxWidth: 1200, margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "center", gap: 16 }}>
+          <Link href="/" >
+              <Image src="/logo.png" alt="Cabro" width={100} height={100}  priority className="object-contain" />
+            </Link>
         </div>
 
         {/* Bottom links */}

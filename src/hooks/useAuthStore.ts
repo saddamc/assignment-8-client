@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { useCartStore } from "./useCartStore";
 
 export type UserRole = "ADMIN" | "SELLER" | "CUSTOMER";
 
@@ -25,13 +26,27 @@ interface AuthState {
 
 export const useAuthStore = create<AuthState>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       user: null,
       isAuthenticated: false,
 
-      setUser: (user) => set({ user, isAuthenticated: true }),
+      setUser: async (user) => {
+        set({ user, isAuthenticated: true });
+        // Sync cart when customer logs in
+        if (user.role === "CUSTOMER") {
+          try {
+            await useCartStore.getState().syncWithBackend();
+          } catch (error) {
+            console.error("Failed to sync cart on login:", error);
+          }
+        }
+      },
 
-      clearUser: () => set({ user: null, isAuthenticated: false }),
+      clearUser: () => {
+        set({ user: null, isAuthenticated: false });
+        // Clear synced cart items when user logs out
+        useCartStore.getState().clearCart();
+      },
     }),
     {
       name: "luxecommerce-auth-storage",

@@ -6,6 +6,7 @@ export const getCustomerNavItems = (): NavSection[] => [
         items: [
             { title: "Overview", href: "/dashboard", icon: "LayoutDashboard", roles: ["CUSTOMER"] },
             { title: "My Orders", href: "/dashboard/orders", icon: "Package", roles: ["CUSTOMER"] },
+            { title: "Addresses", href: "/dashboard/addresses", icon: "MapPin", roles: ["CUSTOMER"] },
             { title: "Wishlist", href: "/dashboard/wishlist", icon: "Heart", roles: ["CUSTOMER"] },
         ],
     },
@@ -62,6 +63,7 @@ export const getAdminNavItems = (): NavSection[] => [
         items: [
             { title: "Users", href: "/admin/users", icon: "Users", roles: ["ADMIN"] },
             { title: "Products", href: "/admin/products", icon: "Package", roles: ["ADMIN"] },
+            { title: "Orders", href: "/admin/orders", icon: "ShoppingBag", roles: ["ADMIN"] },
             { title: "Categories", href: "/admin/categories", icon: "Tag", roles: ["ADMIN"] },
             { title: "Transactions", href: "/admin/transactions", icon: "CreditCard", roles: ["ADMIN"] },
         ],

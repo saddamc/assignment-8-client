@@ -32,7 +32,7 @@ export default async function ProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-white to-gray-50">
+    <div className="min-h-screen bg-linear-to-b from-white to-gray-50">
       <div className="container max-w-2xl mx-auto px-4 py-8">
         {/* Header */}
         <div className="mb-8">

@@ -214,6 +214,7 @@ export default async function Home() {
             className="hz-section-card"
           >
             <div style={{ background: HERO_BANNERS[0].bg, padding: "48px 60px", minHeight: 340, display: "flex", alignItems: "center" }}>
+
               <div>
                 <span style={{ display: "inline-block", background: HERO_BANNERS[0].accent, color: "#fff", fontSize: 12, fontWeight: 700, padding: "4px 12px", borderRadius: 3, marginBottom: 16, letterSpacing: ".04em" }}>
                   {HERO_BANNERS[0].badge}

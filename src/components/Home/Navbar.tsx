@@ -82,12 +82,21 @@ function UserMenu({ user }: { user: AuthUser }) {
     router.push("/login");
   };
 
+  const settingsRoute =
+    user.role === "ADMIN"
+      ? "/admin/settings"
+      : user.role === "SELLER"
+      ? "/seller/settings"
+      : "/dashboard/my-profile";
+
+  const settingsLabel = user.role === "CUSTOMER" ? "My Profile" : "Settings";
+
   const menuItems = [
     { label: "Dashboard", href: dashRoute(user.role), icon: <LayoutDashboard size={14} />, show: true },
     { label: "My Orders", href: "/dashboard/orders", icon: <Package size={14} />, show: user.role === "CUSTOMER" },
     { label: "My Products", href: "/seller/products", icon: <Store size={14} />, show: user.role === "SELLER" },
     { label: "Admin Panel", href: "/admin/users", icon: <Shield size={14} />, show: user.role === "ADMIN" },
-    { label: "Settings", href: "/dashboard/settings", icon: <Settings size={14} />, show: true },
+    { label: settingsLabel, href: settingsRoute, icon: <Settings size={14} />, show: true },
   ].filter((item) => item.show);
 
   return (

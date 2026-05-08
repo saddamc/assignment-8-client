@@ -44,10 +44,11 @@ interface Props {
   total: number;
   currentPage: number;
   currentParams: {
-    categoryId: string;
-    brandId: string;
+    categoryIds: string[];
+    brandIds: string[];
     minPrice: string;
     maxPrice: string;
+    priceRanges: string;
     minRating: string;
     inStock: string;
     sortBy: string;
@@ -126,27 +127,34 @@ export default function ProductsClient({
   const totalPages = Math.ceil(total / LIMIT);
 
   const hasActiveFilters =
-    !!currentParams.categoryId ||
-    !!currentParams.brandId ||
+    currentParams.categoryIds.length > 0 ||
+    currentParams.brandIds.length > 0 ||
     !!currentParams.minPrice ||
     !!currentParams.maxPrice ||
+    !!currentParams.priceRanges ||
     !!currentParams.minRating ||
     !!currentParams.inStock ||
     !!currentParams.searchTerm;
 
-  const updateParams = (updates: Record<string, string>) => {
+  const updateParams = (updates: Record<string, string | string[]>) => {
     const params = new URLSearchParams();
-    const merged = { ...currentParams, ...updates };
-    if (merged.categoryId) params.set("categoryId", merged.categoryId);
-    if (merged.brandId) params.set("brandId", merged.brandId);
+    const merged = { ...currentParams, ...updates } as Record<string, any>;
+
+    if (Array.isArray(merged.categoryIds) && merged.categoryIds.length > 0) {
+      params.set("categoryIds", merged.categoryIds.join(","));
+    }
+    if (Array.isArray(merged.brandIds) && merged.brandIds.length > 0) {
+      params.set("brandIds", merged.brandIds.join(","));
+    }
     if (merged.minPrice) params.set("minPrice", merged.minPrice);
     if (merged.maxPrice) params.set("maxPrice", merged.maxPrice);
+    if (merged.priceRanges) params.set("priceRanges", merged.priceRanges);
     if (merged.minRating) params.set("minRating", merged.minRating);
     if (merged.inStock) params.set("inStock", merged.inStock);
     if (merged.sortBy) params.set("sortBy", merged.sortBy);
     if (merged.sortOrder) params.set("sortOrder", merged.sortOrder);
     if (merged.searchTerm) params.set("searchTerm", merged.searchTerm);
-    if (updates.page) params.set("page", updates.page);
+    if (updates.page) params.set("page", updates.page as string);
     startTransition(() => {
       router.push(`${pathname}?${params.toString()}`);
     });
@@ -159,20 +167,36 @@ export default function ProductsClient({
     startTransition(() => { router.push(pathname); });
   };
 
-  const handleCategoryChange = (id: string) =>
-    updateParams({ categoryId: id === currentParams.categoryId ? "" : id, page: "1" });
-
-  const handleBrandChange = (id: string) =>
-    updateParams({ brandId: id === currentParams.brandId ? "" : id, page: "1" });
-
-  const handlePriceRange = (min: string, max: string) => {
-    const isActive = currentParams.minPrice === min && currentParams.maxPrice === max;
-    setCustomMin(isActive ? "" : min);
-    setCustomMax(isActive ? "" : max);
-    updateParams({ minPrice: isActive ? "" : min, maxPrice: isActive ? "" : max, page: "1" });
+  const handleCategoryChange = (id: string) => {
+    const next = currentParams.categoryIds.includes(id)
+      ? currentParams.categoryIds.filter((cid) => cid !== id)
+      : [...currentParams.categoryIds, id];
+    updateParams({ categoryIds: next, page: "1" });
   };
 
-  const handleCustomPrice = () => updateParams({ minPrice: customMin, maxPrice: customMax, page: "1" });
+  const handleBrandChange = (id: string) => {
+    const next = currentParams.brandIds.includes(id)
+      ? currentParams.brandIds.filter((bid) => bid !== id)
+      : [...currentParams.brandIds, id];
+    updateParams({ brandIds: next, page: "1" });
+  };
+
+  const handlePriceRange = (min: string, max: string) => {
+    const rangeKey = `${min}-${max}`;
+    const selectedRanges = currentParams.priceRanges
+      .split(",")
+      .filter(Boolean);
+
+    const nextRanges = selectedRanges.includes(rangeKey)
+      ? selectedRanges.filter((range) => range !== rangeKey)
+      : [...selectedRanges, rangeKey];
+
+    setCustomMin("");
+    setCustomMax("");
+    updateParams({ priceRanges: nextRanges.join(","), minPrice: "", maxPrice: "", page: "1" });
+  };
+
+  const handleCustomPrice = () => updateParams({ minPrice: customMin, maxPrice: customMax, priceRanges: "", page: "1" });
 
   const handleRating = (rating: number) => {
     const val = String(rating);
@@ -203,8 +227,13 @@ export default function ProductsClient({
   };
 
   const currentSortValue = `${currentParams.sortBy}:${currentParams.sortOrder}`;
-  const isPriceActive = (min: string, max: string) =>
-    currentParams.minPrice === min && currentParams.maxPrice === max;
+  const isPriceActive = (min: string, max: string) => {
+    const selectedRanges = currentParams.priceRanges
+      .split(",")
+      .filter(Boolean);
+    const rangeKey = `${min}-${max}`;
+    return selectedRanges.includes(rangeKey) || (currentParams.minPrice === min && currentParams.maxPrice === max);
+  };
 
   const FilterSidebar = () => (
     <div className="space-y-5">
@@ -235,69 +264,79 @@ export default function ProductsClient({
 
       {categories.length > 0 && (
         <FilterSection title="Category">
-          <ul className="space-y-1">
-            <li>
-              <button
-                onClick={() => updateParams({ categoryId: "", page: "1" })}
-                className={`w-full flex items-center justify-between px-2 py-1.5 rounded-lg text-sm transition ${!currentParams.categoryId ? "bg-indigo-50 text-indigo-700 font-semibold" : "text-zinc-600 hover:bg-zinc-50"}`}
-              >
-                <span>All Categories</span>
-              </button>
-            </li>
+          <div className="space-y-2">
             {categories.map((cat) => (
-              <li key={cat.id}>
-                <button
-                  onClick={() => handleCategoryChange(cat.id)}
-                  className={`w-full flex items-center justify-between px-2 py-1.5 rounded-lg text-sm transition ${currentParams.categoryId === cat.id ? "bg-indigo-50 text-indigo-700 font-semibold" : "text-zinc-600 hover:bg-zinc-50"}`}
-                >
+              <label
+                key={cat.id}
+                onClick={() => handleCategoryChange(cat.id)}
+                className={`flex items-center gap-3 rounded-2xl border px-3 py-2 text-sm transition cursor-pointer ${currentParams.categoryIds.includes(cat.id) ? "border-indigo-500 bg-indigo-50 text-zinc-900" : "border-zinc-200 bg-white text-zinc-700 hover:border-zinc-300"}`}
+              >
+                <input
+                  type="checkbox"
+                  checked={currentParams.categoryIds.includes(cat.id)}
+                  readOnly
+                  className="h-4 w-4 rounded border-zinc-300 text-indigo-600 focus:ring-indigo-500"
+                />
+                <div className="flex flex-1 items-center justify-between gap-4">
                   <span>{cat.name}</span>
-                  {cat._count !== undefined && <span className="text-xs text-zinc-400">{cat._count.products}</span>}
-                </button>
-              </li>
+                  {cat._count !== undefined && (
+                    <span className="rounded-full bg-zinc-100 px-2 py-0.5 text-[11px] font-semibold text-zinc-500">
+                      {cat._count.products}
+                    </span>
+                  )}
+                </div>
+              </label>
             ))}
-          </ul>
+          </div>
         </FilterSection>
       )}
 
       {brands.length > 0 && (
         <FilterSection title="Brand">
-          <ul className="space-y-1">
-            <li>
-              <button
-                onClick={() => updateParams({ brandId: "", page: "1" })}
-                className={`w-full flex items-center justify-between px-2 py-1.5 rounded-lg text-sm transition ${!currentParams.brandId ? "bg-indigo-50 text-indigo-700 font-semibold" : "text-zinc-600 hover:bg-zinc-50"}`}
-              >
-                <span>All Brands</span>
-              </button>
-            </li>
+          <div className="space-y-2">
             {brands.map((brand) => (
-              <li key={brand.id}>
-                <button
-                  onClick={() => handleBrandChange(brand.id)}
-                  className={`w-full flex items-center justify-between px-2 py-1.5 rounded-lg text-sm transition ${currentParams.brandId === brand.id ? "bg-indigo-50 text-indigo-700 font-semibold" : "text-zinc-600 hover:bg-zinc-50"}`}
-                >
+              <label
+                key={brand.id}
+                onClick={() => handleBrandChange(brand.id)}
+                className={`flex items-center gap-3 rounded-2xl border px-3 py-2 text-sm transition cursor-pointer ${currentParams.brandIds.includes(brand.id) ? "border-indigo-500 bg-indigo-50 text-zinc-900" : "border-zinc-200 bg-white text-zinc-700 hover:border-zinc-300"}`}
+              >
+                <input
+                  type="checkbox"
+                  checked={currentParams.brandIds.includes(brand.id)}
+                  readOnly
+                  className="h-4 w-4 rounded border-zinc-300 text-indigo-600 focus:ring-indigo-500"
+                />
+                <div className="flex flex-1 items-center justify-between gap-4">
                   <span>{brand.name}</span>
-                  {brand._count !== undefined && <span className="text-xs text-zinc-400">{brand._count.products}</span>}
-                </button>
-              </li>
+                  {brand._count !== undefined && (
+                    <span className="rounded-full bg-zinc-100 px-2 py-0.5 text-[11px] font-semibold text-zinc-500">
+                      {brand._count.products}
+                    </span>
+                  )}
+                </div>
+              </label>
             ))}
-          </ul>
+          </div>
         </FilterSection>
       )}
 
       <FilterSection title="Price Range">
-        <ul className="space-y-1 mb-4">
+        <div className="space-y-2 mb-4">
           {PRICE_RANGES.map((range) => (
-            <li key={range.label}>
-              <button
-                onClick={() => handlePriceRange(range.min, range.max)}
-                className={`w-full text-left px-2 py-1.5 rounded-lg text-sm transition ${isPriceActive(range.min, range.max) ? "bg-indigo-50 text-indigo-700 font-semibold" : "text-zinc-600 hover:bg-zinc-50"}`}
-              >
-                {range.label}
-              </button>
-            </li>
+            <label
+              key={range.label}
+              className={`flex items-center gap-3 rounded-2xl border px-3 py-2 text-sm transition cursor-pointer ${isPriceActive(range.min, range.max) ? "border-indigo-500 bg-indigo-50 text-zinc-900" : "border-zinc-200 bg-white text-zinc-700 hover:border-zinc-300"}`}
+            >
+              <input
+                type="checkbox"
+                checked={isPriceActive(range.min, range.max)}
+                onChange={() => handlePriceRange(range.min, range.max)}
+                className="h-4 w-4 rounded border-zinc-300 text-indigo-600 focus:ring-indigo-500"
+              />
+              <span>{range.label}</span>
+            </label>
           ))}
-        </ul>
+        </div>
         <div className="flex items-center gap-2">
           <input type="number" placeholder="Min" value={customMin} onChange={(e) => setCustomMin(e.target.value)}
             className="w-full h-8 rounded-lg border border-zinc-200 px-2 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-400" />
@@ -312,33 +351,42 @@ export default function ProductsClient({
       </FilterSection>
 
       <FilterSection title="Rating">
-        <ul className="space-y-1">
+        <div className="space-y-2">
           {RATING_OPTIONS.map((rating) => (
-            <li key={rating}>
-              <button
-                onClick={() => handleRating(rating)}
-                className={`w-full flex items-center gap-2 px-2 py-1.5 rounded-lg text-sm transition ${currentParams.minRating === String(rating) ? "bg-indigo-50 text-indigo-700 font-semibold" : "text-zinc-600 hover:bg-zinc-50"}`}
-              >
-                <span className="flex items-center gap-0.5">
-                  {Array.from({ length: 5 }).map((_, i) => (
-                    <Star key={i} className={`w-3.5 h-3.5 ${i < rating ? "fill-amber-400 text-amber-400" : "text-zinc-300"}`} />
-                  ))}
-                </span>
-                <span className="text-xs">& Up</span>
-              </button>
-            </li>
+            <label
+              key={rating}
+              className={`flex items-center gap-3 rounded-2xl border px-3 py-2 text-sm transition cursor-pointer ${currentParams.minRating === String(rating) ? "border-indigo-500 bg-indigo-50 text-zinc-900" : "border-zinc-200 bg-white text-zinc-700 hover:border-zinc-300"}`}
+            >
+              <input
+                type="checkbox"
+                checked={currentParams.minRating === String(rating)}
+                onChange={() => handleRating(rating)}
+                className="h-4 w-4 rounded border-zinc-300 text-indigo-600 focus:ring-indigo-500"
+              />
+              <span className="flex items-center gap-0.5">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <Star key={i} className={`w-3.5 h-3.5 ${i < rating ? "fill-amber-400 text-amber-400" : "text-zinc-300"}`} />
+                ))}
+              </span>
+              <span className="text-xs">& Up</span>
+            </label>
           ))}
-        </ul>
+        </div>
       </FilterSection>
 
       <FilterSection title="Availability" defaultOpen={false}>
-        <button
-          onClick={handleInStock}
-          className={`flex items-center gap-2 px-2 py-1.5 rounded-lg text-sm w-full transition ${currentParams.inStock === "true" ? "bg-indigo-50 text-indigo-700 font-semibold" : "text-zinc-600 hover:bg-zinc-50"}`}
+        <label
+          className={`flex items-center gap-3 rounded-2xl border px-3 py-2 text-sm transition cursor-pointer ${currentParams.inStock === "true" ? "border-indigo-500 bg-indigo-50 text-zinc-900" : "border-zinc-200 bg-white text-zinc-700 hover:border-zinc-300"}`}
         >
-          <Package className="w-3.5 h-3.5" />
-          In Stock Only
-        </button>
+          <input
+            type="checkbox"
+            checked={currentParams.inStock === "true"}
+            onChange={handleInStock}
+            className="h-4 w-4 rounded border-zinc-300 text-indigo-600 focus:ring-indigo-500"
+          />
+          <Package className="w-4 h-4 text-zinc-500" />
+          <span>In Stock Only</span>
+        </label>
       </FilterSection>
     </div>
   );
@@ -417,24 +465,39 @@ export default function ProductsClient({
                   <button onClick={() => updateParams({ searchTerm: "", page: "1" })}><X className="w-3 h-3" /></button>
                 </span>
               )}
-              {currentParams.categoryId && (
-                <span className="flex items-center gap-1.5 h-7 px-3 rounded-full bg-indigo-100 text-xs font-medium text-indigo-700">
-                  {categories.find((c) => c.id === currentParams.categoryId)?.name || "Category"}
-                  <button onClick={() => updateParams({ categoryId: "", page: "1" })}><X className="w-3 h-3" /></button>
+              {currentParams.categoryIds.map((catId) => (
+                <span key={catId} className="flex items-center gap-1.5 h-7 px-3 rounded-full bg-indigo-100 text-xs font-medium text-indigo-700">
+                  {categories.find((c) => c.id === catId)?.name || "Category"}
+                  <button onClick={() => updateParams({ categoryIds: currentParams.categoryIds.filter((id) => id !== catId), page: "1" })}><X className="w-3 h-3" /></button>
                 </span>
-              )}
-              {currentParams.brandId && (
-                <span className="flex items-center gap-1.5 h-7 px-3 rounded-full bg-indigo-100 text-xs font-medium text-indigo-700">
-                  {brands.find((b) => b.id === currentParams.brandId)?.name || "Brand"}
-                  <button onClick={() => updateParams({ brandId: "", page: "1" })}><X className="w-3 h-3" /></button>
+              ))}
+              {currentParams.brandIds.map((brandId) => (
+                <span key={brandId} className="flex items-center gap-1.5 h-7 px-3 rounded-full bg-indigo-100 text-xs font-medium text-indigo-700">
+                  {brands.find((b) => b.id === brandId)?.name || "Brand"}
+                  <button onClick={() => updateParams({ brandIds: currentParams.brandIds.filter((id) => id !== brandId), page: "1" })}><X className="w-3 h-3" /></button>
                 </span>
-              )}
+              ))}
               {(currentParams.minPrice || currentParams.maxPrice) && (
                 <span className="flex items-center gap-1.5 h-7 px-3 rounded-full bg-green-100 text-xs font-medium text-green-700">
                   {currentParams.minPrice ? `$${currentParams.minPrice}` : "$0"} – {currentParams.maxPrice ? `$${currentParams.maxPrice}` : "∞"}
-                  <button onClick={() => { setCustomMin(""); setCustomMax(""); updateParams({ minPrice: "", maxPrice: "", page: "1" }); }}><X className="w-3 h-3" /></button>
+                  <button onClick={() => { setCustomMin(""); setCustomMax(""); updateParams({ minPrice: "", maxPrice: "", priceRanges: "", page: "1" }); }}><X className="w-3 h-3" /></button>
                 </span>
               )}
+              {currentParams.priceRanges && currentParams.priceRanges.split(",").filter(Boolean).map((range) => {
+                const option = PRICE_RANGES.find((r) => `${r.min}-${r.max}` === range);
+                return (
+                  <span key={range} className="flex items-center gap-1.5 h-7 px-3 rounded-full bg-green-100 text-xs font-medium text-green-700">
+                    {option?.label || range.replace("-", " – ")}
+                    <button onClick={() => {
+                      const nextRanges = currentParams.priceRanges
+                        .split(",")
+                        .filter(Boolean)
+                        .filter((value) => value !== range);
+                      updateParams({ priceRanges: nextRanges.join(","), page: "1" });
+                    }}><X className="w-3 h-3" /></button>
+                  </span>
+                );
+              })}
               {currentParams.minRating && (
                 <span className="flex items-center gap-1.5 h-7 px-3 rounded-full bg-amber-100 text-xs font-medium text-amber-700">
                   {currentParams.minRating}+ Stars
