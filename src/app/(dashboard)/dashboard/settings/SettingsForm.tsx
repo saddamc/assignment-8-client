@@ -63,7 +63,6 @@ export default function SettingsForm({ user }: Props) {
         <div className="relative">
           <div className="w-20 h-20 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-black text-2xl overflow-hidden">
             {preview ? (
-              // eslint-disable-next-line @next/next/no-img-element
               <Image src={preview} alt="Profile" 
               sizes="(max-width: 640px) 50vw,
               (max-width: 1024px) 33vw, 25vw" className=" object-cover" />

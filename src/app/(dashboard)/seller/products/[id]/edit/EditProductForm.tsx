@@ -493,7 +493,7 @@ export default function EditProductForm({
                   <div className="grid grid-cols-3 sm:grid-cols-5 gap-3 mt-3">
                     {newPreviews.map((src, i) => (
                       <div key={i} className="relative aspect-square rounded-xl overflow-hidden border border-zinc-200 group">
-                        <Image src={src} alt={`New ${i + 1}`} sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw" className="object-cover" />
+                        <Image src={src} alt={`New ${i + 1}`} fill sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw" className="object-cover" />
                         <div className="absolute bottom-0 left-0 right-0 bg-amber-500/80 text-white text-xs text-center py-1">New</div>
                         <button
                           type="button"

@@ -188,7 +188,9 @@ export default async function ProductDetailsPage({ params }: { params: Promise<{
                   <Link key={p.id} href={`/products/${p.id}`} className="group">
                     <div className="relative aspect-4/5 bg-zinc-100 rounded-2xl overflow-hidden mb-3">
                       {p.images?.[0] ? (
-                        <Image src={p.images[0]} alt={p.name} fill className="object-cover transition-transform duration-500 group-hover:scale-105" />
+                        <Image src={p.images[0]} alt={p.name} fill 
+                        sizes="(max-width: 640px) 50vw, 25vw"
+                        className="object-cover transition-transform duration-500 group-hover:scale-105" />
                       ) : (
                         <div className="absolute inset-0 bg-linear-to-br from-zinc-200 to-zinc-300 flex items-center justify-center text-xs text-zinc-400 font-medium px-3 text-center">{p.name}</div>
                       )}

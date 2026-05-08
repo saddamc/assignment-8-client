@@ -64,7 +64,7 @@ export default async function NewArrivalsPage() {
                           <Image
                             src={product.images[0]}
                             alt={product.name}
-                            fill
+                            fill sizes="(max-width: 640px) 50vw, 25vw"
                             className="object-cover transition-transform duration-700 group-hover:scale-105"
                           />
                         ) : (

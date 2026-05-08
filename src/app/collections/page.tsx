@@ -67,7 +67,7 @@ export default async function CollectionsPage() {
                 {categories.map((cat: Category, i: number) => (
                   <Link key={cat.id} href={`/products?categoryId=${cat.id}`} className="group relative overflow-hidden rounded-3xl aspect-4/3 block">
                     {cat.image ? (
-                      <Image src={cat.image} alt={cat.name} fill className="object-cover transition-transform duration-700 group-hover:scale-105" />
+                      <Image src={cat.image} alt={cat.name} fill sizes="(max-width: 640px) 50vw, 25vw" className="object-cover transition-transform duration-700 group-hover:scale-105" />
                     ) : (
                       <div className={`absolute inset-0 bg-linear-to-br ${GRADIENT_PALETTES[i % GRADIENT_PALETTES.length]}`} />
                     )}

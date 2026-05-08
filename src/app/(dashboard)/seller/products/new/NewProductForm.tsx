@@ -535,7 +535,6 @@ export default function NewProductForm({
                     key={i}
                     className="relative aspect-square rounded-xl overflow-hidden border border-zinc-200 group"
                   >
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
                     <Image src={src} alt={`Preview ${i + 1}`} fill
                     sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw" className=" object-cover" />
                     {i === 0 && (

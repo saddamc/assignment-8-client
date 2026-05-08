@@ -44,7 +44,9 @@ export default async function SellerPayoutsPage() {
         ].map(({ label, value, icon: Icon, color }) => (
           <div key={label} className="bg-white rounded-2xl border border-zinc-100 shadow-sm p-5">
             <div className={`${color} mb-2`}><Icon className="w-5 h-5" /></div>
-            <p className="text-2xl font-black">${value.toFixed(2)}</p>
+            <p className="text-2xl font-black">
+              ${(value ?? 0).toFixed(2)}
+            </p>
             <p className="text-xs text-zinc-400 mt-1 font-medium">{label}</p>
           </div>
         ))}

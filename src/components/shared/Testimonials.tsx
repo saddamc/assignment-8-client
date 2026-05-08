@@ -48,6 +48,7 @@ const Testimonials: React.FC<TestimonialsProps> = ({ testimonials }) => {
               <Image
                 src={testimonial.avatar}
                 alt={testimonial.name}
+                fill sizes="(max-width: 640px) 50vw, 25vw"
                 className="w-10 h-10 rounded-full object-cover"
               />
             )}

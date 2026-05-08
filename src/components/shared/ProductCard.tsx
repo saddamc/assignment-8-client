@@ -47,7 +47,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
       <div className="relative w-full aspect-square bg-neutral-100 overflow-hidden">
         <Image
           src={image}
-          alt={title}
+          alt={title} fill
           sizes="(max-width: 640px) 50vw,
               (max-width: 1024px) 33vw, 25vw"
           className="object-cover group-hover:scale-110 transition-transform duration-300"

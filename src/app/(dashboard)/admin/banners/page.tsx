@@ -46,7 +46,7 @@ export default async function AdminBannersPage() {
           {banners.map((banner) => (
             <div key={banner.id} className="bg-white rounded-2xl border border-zinc-100 shadow-sm overflow-hidden flex items-center gap-6 p-4">
               {banner.imageUrl && (
-                <Image src={banner.imageUrl} alt={banner.title} width={128} height={80} className="object-cover rounded-xl flex-shrink-0" />
+                <Image src={banner.imageUrl} alt={banner.title} width={128} height={80} className="object-cover rounded-xl shrink-0" />
               )}
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-1">

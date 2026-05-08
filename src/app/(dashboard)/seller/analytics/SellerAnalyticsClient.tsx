@@ -71,8 +71,11 @@ export default function SellerAnalyticsClient({ analytics }: Props) {
       {/* Revenue Chart */}
       <div className="bg-white rounded-2xl border border-zinc-100 shadow-sm p-6">
         <h2 className="text-lg font-bold mb-6">Revenue Over Time</h2>
-        <div className="h-64">
-          <ResponsiveContainer width="100%" height="100%">
+        <div className="w-full min-h-80 md:min-h-100">
+          <ResponsiveContainer width="100%" 
+              height="100%" 
+              initialDimension={{ width: 500, height: 300 }}
+              aspect={2}>
             <AreaChart data={revenueChart}>
               <defs>
                 <linearGradient id="sellerRevGrad" x1="0" y1="0" x2="0" y2="1">

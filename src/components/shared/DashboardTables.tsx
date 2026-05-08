@@ -225,7 +225,7 @@ const ProductsTable: React.FC<ProductsTableProps> = ({
                 <div className="flex items-center gap-3">
                   <Image
                     src={product.image}
-                    alt={product.name}
+                    alt={product.name} fill sizes="(max-width: 640px) 50vw, 25vw"
                     className="w-10 h-10 rounded object-cover"
                   />
                   <span className="font-medium text-neutral-900 line-clamp-1">

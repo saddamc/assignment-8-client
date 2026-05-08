@@ -480,9 +480,10 @@ export default function ProductsClient({
                           </div>
                         )}
                         {product.images?.[0] ? (
-                          <Image src={product.images[0]} alt={product.name} fill sizes="(max-width: 640px) 100vw, (max-width: 1280px) 50vw, 33vw" className="object-cover transition-transform duration-700 group-hover:scale-110" />
+                          <Image src={product.images[0]} alt={product.name} fill 
+                          sizes="(max-width: 640px) 100vw, (max-width: 1280px) 50vw, 33vw" className="object-cover transition-transform duration-700 group-hover:scale-110" loading="eager" />
                         ) : (
-                          <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-zinc-200 to-zinc-300 text-zinc-500 text-sm font-medium px-4 text-center">
+                          <div className="absolute inset-0 flex items-center justify-center bg-linear-to-br from-zinc-200 to-zinc-300 text-zinc-500 text-sm font-medium px-4 text-center">
                             {product.name}
                           </div>
                         )}
@@ -491,7 +492,7 @@ export default function ProductsClient({
                             <button onClick={(e) => handleAddToCart(e, product)}
                               className="w-full flex items-center justify-center gap-2 bg-white rounded-2xl py-3 text-sm font-bold text-zinc-900 shadow-lg hover:bg-zinc-50 active:scale-95 transition-all">
                               <ShoppingBag className="w-4 h-4" />
-                              Quick Add
+                              Add to Cart
                             </button>
                           </div>
                         )}

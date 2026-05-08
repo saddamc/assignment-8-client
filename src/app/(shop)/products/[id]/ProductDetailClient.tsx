@@ -61,7 +61,7 @@ export default function ProductDetailClient({ product, discountedPrice, averageR
                 className={`relative aspect-square rounded-xl overflow-hidden border-2 transition-all ${selectedImage === idx ? "border-indigo-600 ring-2 ring-indigo-200" : "border-zinc-200 hover:border-zinc-400"}`}
               >
                 {img ? (
-                  <Image src={img} alt={`Thumb ${idx + 1}`} fill className="object-cover" />
+                  <Image src={img} alt={`Thumb ${idx + 1}`} fill sizes="(max-width: 640px) 50vw, 25vw" className="object-cover" />
                 ) : (
                   <div className="absolute inset-0 bg-linear-to-br from-zinc-100 to-zinc-200" />
                 )}
@@ -72,7 +72,7 @@ export default function ProductDetailClient({ product, discountedPrice, averageR
         {/* Main Image */}
         <div className="flex-1 relative aspect-4/5 bg-zinc-100 rounded-3xl overflow-hidden group border border-zinc-200">
           {images[selectedImage] ? (
-            <Image src={images[selectedImage]} alt={product.name} fill className="object-cover transition-transform duration-700 group-hover:scale-105" priority />
+            <Image src={images[selectedImage]} alt={product.name} fill  sizes="(max-width: 640px) 50vw, 25vw"className="object-cover transition-transform duration-700 group-hover:scale-105" priority />
           ) : (
             <div className="absolute inset-0 flex items-center justify-center bg-linear-to-br from-zinc-100 to-zinc-200 text-zinc-400 text-sm font-medium text-center px-8">
               {product.name}

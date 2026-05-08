@@ -80,7 +80,9 @@ export default function CartPage() {
                                     <div key={item.id} className={`p-6 flex flex-col sm:flex-row gap-6 ${idx !== cartItems.length - 1 ? "border-b" : ""}`}>
                                         <div className="w-24 h-24 sm:w-28 sm:h-28 bg-zinc-100 rounded-xl shrink-0 relative overflow-hidden border">
                                             {item.image && (
-                                                <Image src={item.image} alt={item.name} fill className="object-cover" />
+                                                <Image src={item.image} alt={item.name} fill 
+                                                sizes="(max-width: 640px) 50vw, 25vw"
+                                                className="object-cover" />
                                             )}
                                         </div>
 

@@ -113,7 +113,9 @@ export default async function SellerProductsPage({
                                 src={product.images[0]}
                                 alt={product.name}
                                 fill
+                                sizes="(max-width: 640px) 50vw, 25vw"
                                 className="object-cover"
+                                quality={75}           // Lower quality for small images
                               />
                             ) : (
                               <div className="absolute inset-0 bg-zinc-200 flex items-center justify-center text-zinc-400 text-xs">
