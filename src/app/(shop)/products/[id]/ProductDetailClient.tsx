@@ -28,7 +28,7 @@ export default function ProductDetailClient({ product, discountedPrice, averageR
   const [selectedColor, setSelectedColor] = useState(0);
   const [selectedSize, setSelectedSize] = useState("M");
   const [wishlisted, setWishlisted] = useState(false);
-  const { items } = useCartStore();
+  const { items, addItem } = useCartStore();
   const existingItem = items.find(item => item.id === product.id);
   const currentQuantity = existingItem ? existingItem.quantity : 0;
   const isOutOfStock = !product.stock || product.stock <= 0;

@@ -587,7 +587,7 @@ export default function ProductsClient({
             </div>
           ) : (
             <>
-              <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+              <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                 {initialProducts.map((product, index) => {
                   const avg = product.reviews?.length
                     ? product.reviews.reduce((a: number, r: { rating: number }) => a + r.rating, 0) / product.reviews.length
@@ -599,7 +599,7 @@ export default function ProductsClient({
                   return (
                     <article key={product.id} className="group relative flex flex-col">
                       <div className="relative aspect-[4/5] overflow-hidden rounded-2xl bg-[#f3f4f6] mb-3">
-                        <Link href={`/products/${product.id}`} className="absolute inset-0 z-0" tabIndex={-1} aria-label={product.name}>
+                        <Link href={`/products/${product.slug || product.id}`} className="absolute inset-0 z-0" tabIndex={-1} aria-label={product.name}>
                           <Image
                             src={image}
                             alt={product.name}
@@ -647,7 +647,7 @@ export default function ProductsClient({
 
                       {/* Info */}
                       <div>
-                        <Link href={`/products/${product.id}`}>
+                        <Link href={`/products/${product.slug || product.id}`}>
                           <h3 className="line-clamp-2 text-sm leading-snug text-black transition hover:text-gray-600">
                             {product.name}
                           </h3>

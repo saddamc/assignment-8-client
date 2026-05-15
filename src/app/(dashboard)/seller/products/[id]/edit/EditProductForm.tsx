@@ -38,6 +38,7 @@ interface ProductData {
   price?: number;
   discountPrice?: number | null;
   sku?: string | null;
+  slug?: string | null;
   stock?: number;
   categoryId?: string | null;
   subCategoryId?: string | null;
@@ -60,6 +61,7 @@ interface ProductData {
 
 interface FormState {
   name: string;
+  slug: string;
   shortDescription: string;
   description: string;
   price: string;
@@ -104,6 +106,7 @@ export default function EditProductForm({
 
   const [form, setForm] = useState<FormState>({
     name:             product.name             || "",
+    slug:             product.slug             || "",
     shortDescription: product.shortDescription || "",
     description:      product.description      || "",
     price:            product.price?.toString() || "",
@@ -289,6 +292,7 @@ export default function EditProductForm({
       try {
         const fd = new FormData();
         fd.append("name", form.name.trim());
+        if (form.slug) fd.append("slug", slugify(form.slug));
         fd.append("shortDescription", form.shortDescription.trim());
         fd.append("description", form.description.trim());
         fd.append("price", form.price);
@@ -468,8 +472,23 @@ export default function EditProductForm({
             <div className="space-y-2">
               <Label htmlFor="name">Product Title *</Label>
               <Input id="name" name="name" value={form.name} onChange={handleChange} placeholder="e.g. Premium Wireless Headphones" />
-              {form.name && (
-                <p className="text-xs text-zinc-400">Slug: <span className="font-mono text-zinc-500">{slugify(form.name)}</span></p>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="slug">
+                Custom URL Slug <span className="text-zinc-400 text-xs font-normal">(leave blank to auto-generate)</span>
+              </Label>
+              <Input
+                id="slug"
+                name="slug"
+                value={form.slug}
+                onChange={handleChange}
+                placeholder={form.name ? slugify(form.name) : "e.g. premium-wireless-headphones"}
+              />
+              {form.slug && (
+                <p className="text-xs text-zinc-400">
+                  Will be saved as: <span className="font-mono text-zinc-500">{slugify(form.slug)}</span>
+                </p>
               )}
             </div>
 
@@ -708,7 +727,7 @@ export default function EditProductForm({
               <div className="p-4 bg-white border rounded-xl space-y-1">
                 <p className="text-xs text-zinc-400 font-medium uppercase tracking-widest">Search Preview</p>
                 <p className="text-blue-600 text-base font-medium">{form.seoTitle || form.name}</p>
-                <p className="text-green-700 text-xs">https://example.com/products/{slugify(form.name)}</p>
+                <p className="text-green-700 text-xs">https://example.com/products/{form.slug ? slugify(form.slug) : slugify(form.name)}</p>
                 <p className="text-sm text-zinc-500">{form.seoDescription || form.shortDescription || form.description.slice(0, 120)}</p>
               </div>
             )}

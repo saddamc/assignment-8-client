@@ -13,21 +13,21 @@ import { useCartStore } from "@/hooks/useCartStore";
 import { useAuthStore } from "@/hooks/useAuthStore";
 import { logoutUser } from "@/services/auth/logoutUser";
 import type { AuthUser } from "@/hooks/useAuthStore";
+import { CartDrawer } from "./CartDrawer";
+import { CategoryDrawer } from "./CategoryDrawer";
 
 const CAT_LINKS = [
-  { label: "Today's Deals", href: "/products?sale=true" },
-  { label: "New Arrivals", href: "/new-arrivals" },
-  { label: "Best Sellers", href: "/products?sortBy=rating&sortOrder=desc" },
-  { label: "Collections", href: "/collections" },
+  { label: "All Products", href: "/products" },
+  { label: "New Arrivals", href: "/products?sortBy=createdAt&sortOrder=desc" },
   { label: "Electronics", href: "/products?categorySlug=electronics" },
   { label: "Fashion", href: "/products?categorySlug=fashion" },
   { label: "Home & Living", href: "/products?categorySlug=home-living" },
   { label: "Sports", href: "/products?categorySlug=sports" },
-  { label: "Gift Cards", href: "/products?categorySlug=gifts" },
 ];
 
 const ALL_DEPT_CATS = [
   { label: "All Products", href: "/products", icon: "🛍️" },
+  { label: "New Arrivals", href: "/products?sortBy=createdAt&sortOrder=desc", icon: "✨" },
   { label: "Electronics", href: "/products?categorySlug=electronics", icon: "🔌" },
   { label: "Fashion", href: "/products?categorySlug=fashion", icon: "👗" },
   { label: "Home & Living", href: "/products?categorySlug=home-living", icon: "🏠" },
@@ -36,11 +36,10 @@ const ALL_DEPT_CATS = [
   { label: "Toys & Games", href: "/products?categorySlug=toys", icon: "🧸" },
   { label: "Beauty & Care", href: "/products?categorySlug=beauty", icon: "💄" },
   { label: "Automotive", href: "/products?categorySlug=automotive", icon: "🚗" },
-  { label: "Today's Deals", href: "/products?sale=true", icon: "🏷️" },
 ];
 
 const SEARCH_CATS = [
-  "All Departments", "Electronics", "Fashion", "Home & Living",
+  "All", "Electronics", "Fashion", "Home & Living",
   "Sports", "Books", "Toys", "Beauty", "Automotive",
 ];
 
@@ -159,13 +158,13 @@ function UserMenu({ user }: { user: AuthUser }) {
 const Navbar = () => {
   const [mounted, setMounted] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [searchCat, setSearchCat] = useState("All Departments");
+  const [searchCat, setSearchCat] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
   const [catOpen, setCatOpen] = useState(false);
-  const [allDeptOpen, setAllDeptOpen] = useState(false);
+  const [categoryDrawerOpen, setCategoryDrawerOpen] = useState(false);
   const [visible, setVisible] = useState(true);
+  const [cartOpen, setCartOpen] = useState(false);
   const catRef = useRef<HTMLDivElement>(null);
-  const allDeptRef = useRef<HTMLDivElement>(null);
   const lastScrollY = useRef(0);
   const router = useRouter();
 
@@ -175,11 +174,26 @@ const Navbar = () => {
   useEffect(() => { setMounted(true); }, []);
 
   useEffect(() => {
+    let lastY = window.scrollY;
+    
     const handleScroll = () => {
       const y = window.scrollY;
-      setVisible(y <= 10 || y < lastScrollY.current);
-      lastScrollY.current = y;
+      const delta = y - lastY;
+
+      // Always show when near the top
+      if (y <= 50) {
+        setVisible(true);
+        lastY = y;
+        return;
+      }
+
+      // Only toggle if the scroll distance is significant (prevents jitter)
+      if (Math.abs(delta) > 8) {
+        setVisible(delta < 0);
+        lastY = y;
+      }
     };
+    
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
@@ -192,18 +206,10 @@ const Navbar = () => {
     return () => document.removeEventListener("mousedown", fn);
   }, []);
 
-  useEffect(() => {
-    const fn = (e: MouseEvent) => {
-      if (allDeptRef.current && !allDeptRef.current.contains(e.target as Node)) setAllDeptOpen(false);
-    };
-    document.addEventListener("mousedown", fn);
-    return () => document.removeEventListener("mousedown", fn);
-  }, []);
-
   const handleSearch = useCallback((e: React.FormEvent) => {
     e.preventDefault();
-    if (!searchQuery.trim()) return;
-    const p = new URLSearchParams({ searchTerm: searchQuery.trim() });
+    const p = new URLSearchParams();
+    if (searchQuery.trim()) p.set("searchTerm", searchQuery.trim());
     const slug = SEARCH_CAT_SLUGS[searchCat];
     if (slug) p.set("categorySlug", slug);
     router.push(`/products?${p.toString()}`);
@@ -216,15 +222,12 @@ const Navbar = () => {
           background: #232f3e;
           color: #fff;
           border-bottom: 1px solid #3a4553;
-          overflow-x: auto;
-          scrollbar-width: none;
         }
-        .hz-nav-catnav::-webkit-scrollbar { display: none; }
         .hz-nav-link-pill {
           display: inline-flex; align-items: center;
-          padding: 8px 12px; font-size: 13px; font-weight: 400;
+          padding: 5px 9px; font-size: 13px; font-weight: 400;
           color: #fff; text-decoration: none; border-radius: 3px;
-          border: 2px solid transparent; white-space: nowrap;
+          border: 1px solid transparent; white-space: nowrap;
           transition: border-color 0.12s;
         }
         .hz-nav-link-pill:hover { border-color: #fff; }
@@ -256,7 +259,7 @@ const Navbar = () => {
         .hz-top-action:hover { border-color: #FF9900; }
         .hz-cart-btn {
           display: flex; align-items: center; gap: 4px; padding: 6px 10px;
-          border-radius: 4px; border: 2px solid transparent;
+          border-radius: 4px; border: 2px solid transparent; background: transparent; cursor: pointer;
           text-decoration: none; color: #fff; transition: border-color 0.12s;
         }
         .hz-cart-btn:hover { border-color: #FF9900; }
@@ -269,24 +272,16 @@ const Navbar = () => {
         }
       `}</style>
 
-      <header style={{ position: "sticky", top: 0, zIndex: 100, background: "#131921", boxShadow: "0 2px 8px rgba(0,0,0,0.4)", fontFamily: "Arial, sans-serif", transform: visible ? "translateY(0)" : "translateY(-100%)", transition: "transform 0.25s ease" }}>
+      <header style={{ position: "sticky", top: 0, zIndex: 100, background: "#131921", boxShadow: "0 2px 8px rgba(0,0,0,0.4)", fontFamily: "Arial, sans-serif", transform: visible ? "translateY(0)" : "translateY(-100%)", transition: "transform 0.25s ease", width: "100%" }}>
         {/* Top bar */}
-        <div style={{ maxWidth: 1400, margin: "0 auto", padding: "0 16px", display: "flex", alignItems: "center", gap: 8 }}>
+        <div style={{ width: "100%", padding: "0 16px", display: "flex", alignItems: "center", gap: 16, height: 60 }}>
           {/* Logo */}
           <Link href="/" >
               <Image src="/logo.png" alt="Cabro" width={100} height={100}  priority className="object-contain" />
             </Link>
 
-          {/* Deliver to */}
-          <div className="hz-top-action hz-desktop-only" style={{ flexShrink: 0 }}>
-            <span style={{ fontSize: 11, color: "#ccc" }}>Deliver to</span>
-            <span style={{ fontSize: 13, fontWeight: 700, display: "flex", alignItems: "center", gap: 3 }}>
-              <MapPin size={13} /> New York
-            </span>
-          </div>
-
           {/* Search */}
-          <form onSubmit={handleSearch} style={{ flex: 1, display: "flex", alignItems: "center", borderRadius: 4, overflow: "hidden", minWidth: 0 }}>
+          <form onSubmit={handleSearch} style={{ flex: 1, display: "flex", alignItems: "center", borderRadius: 4, minWidth: 0 }}>
             <div ref={catRef} style={{ position: "relative", flexShrink: 0 }} className="hz-desktop-only">
               <button type="button" className="hz-search-cat-btn" onClick={() => setCatOpen((v) => !v)}>
                 {searchCat.length > 12 ? searchCat.slice(0, 12) + "…" : searchCat}
@@ -304,7 +299,7 @@ const Navbar = () => {
                 </div>
               )}
             </div>
-            <input className="hz-search-input" placeholder="Search products, brands, categories…" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
+            <input className="hz-search-input" placeholder="Search Cabro" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
             <button type="submit" className="hz-search-btn" aria-label="Search">
               <Search size={18} color="#111" />
             </button>
@@ -324,14 +319,8 @@ const Navbar = () => {
             )}
           </div>
 
-          {/* Returns */}
-          <Link href="/dashboard/orders" className="hz-top-action hz-desktop-only" style={{ textDecoration: "none", flexShrink: 0 }}>
-            <span style={{ fontSize: 11, color: "#ccc" }}>Returns</span>
-            <span style={{ fontSize: 13, fontWeight: 700 }}>&amp; Orders</span>
-          </Link>
-
           {/* Cart */}
-          <Link href="/cart" className="hz-cart-btn" style={{ flexShrink: 0 }}>
+          <button onClick={() => setCartOpen(true)} className="hz-cart-btn" style={{ flexShrink: 0 }}>
             <div style={{ position: "relative" }}>
               <ShoppingCart size={28} />
               {mounted && itemCount > 0 && (
@@ -341,7 +330,7 @@ const Navbar = () => {
               )}
             </div>
             <span style={{ fontSize: 13, fontWeight: 700 }} className="hz-desktop-only">Cart</span>
-          </Link>
+          </button>
 
           {/* Mobile hamburger */}
           <button className="hz-mobile-show" onClick={() => setMobileOpen((v) => !v)}
@@ -353,44 +342,17 @@ const Navbar = () => {
 
         {/* Category nav */}
         <nav className="hz-nav-catnav">
-          <div style={{ maxWidth: 1400, margin: "0 auto", padding: "0 16px", display: "flex", alignItems: "center" }}>
+          <div style={{ width: "100%", padding: "2px 16px", display: "flex", alignItems: "center", flexWrap: "wrap", gap: "2px" }}>
             {/* All Departments dropdown */}
-            <div ref={allDeptRef} style={{ position: "relative", flexShrink: 0 }}>
+            <div style={{ position: "relative", flexShrink: 0 }}>
               <button
                 type="button"
-                onClick={() => setAllDeptOpen((v) => !v)}
+                onClick={() => setCategoryDrawerOpen(true)}
                 className="hz-nav-link-pill"
-                style={{ fontWeight: 700, gap: 5, background: allDeptOpen ? "rgba(255,255,255,0.12)" : "transparent", borderColor: allDeptOpen ? "#fff" : "transparent" }}
+                style={{ fontWeight: 700, gap: 5, background: "transparent" }}
               >
-                <Menu size={14} /> All Departments <ChevronDown size={10} />
+                <Menu size={16} /> All
               </button>
-              {allDeptOpen && (
-                <div style={{
-                  position: "absolute", top: "calc(100% + 4px)", left: 0,
-                  width: 232, background: "#fff", border: "1px solid #ddd",
-                  borderRadius: 8, boxShadow: "0 8px 32px rgba(0,0,0,0.18)", zIndex: 200,
-                  overflow: "hidden",
-                }}>
-                  {ALL_DEPT_CATS.map((cat) => (
-                    <Link
-                      key={cat.href}
-                      href={cat.href}
-                      onClick={() => setAllDeptOpen(false)}
-                      style={{
-                        display: "flex", alignItems: "center", gap: 10,
-                        padding: "9px 14px", fontSize: 13, color: "#222",
-                        textDecoration: "none", borderBottom: "1px solid #f2f2f2",
-                        transition: "background 0.1s",
-                      }}
-                      onMouseEnter={(e) => (e.currentTarget.style.background = "#f5f5f5")}
-                      onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
-                    >
-                      <span style={{ fontSize: 16, lineHeight: 1 }}>{cat.icon}</span>
-                      {cat.label}
-                    </Link>
-                  ))}
-                </div>
-              )}
             </div>
             {CAT_LINKS.map((link) => (
               <Link key={link.href} href={link.href} className="hz-nav-link-pill">
@@ -406,7 +368,7 @@ const Navbar = () => {
         <div style={{ position: "fixed", inset: 0, zIndex: 300, background: "rgba(0,0,0,0.7)" }} onClick={() => setMobileOpen(false)}>
           <div onClick={(e) => e.stopPropagation()} style={{ position: "absolute", top: 0, left: 0, bottom: 0, width: 280, background: "#131921", overflowY: "auto", padding: 16 }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-              <span style={{ color: "#FF9900", fontWeight: 800, fontSize: 18 }}>ABRO.com</span>
+              <span style={{ color: "#FF9900", fontWeight: 800, fontSize: 18 }}>Cabro</span>
               <button onClick={() => setMobileOpen(false)} style={{ background: "none", border: "none", color: "#fff", cursor: "pointer" }}><X size={20} /></button>
             </div>
             {mounted && user && (
@@ -430,6 +392,10 @@ const Navbar = () => {
           </div>
         </div>
       )}
+      {/* Cart Drawer */}
+      <CartDrawer open={cartOpen} onClose={() => setCartOpen(false)} />
+      {/* Category Drawer */}
+      <CategoryDrawer open={categoryDrawerOpen} onClose={() => setCategoryDrawerOpen(false)} categories={ALL_DEPT_CATS} />
     </>
   );
 };

@@ -185,7 +185,7 @@ export default async function ProductDetailsPage({ params }: { params: Promise<{
               </div>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
                 {relatedProducts.map((p: ProductType) => (
-                  <Link key={p.id} href={`/products/${p.id}`} className="group">
+                  <Link key={p.id} href={`/products/${p.slug || p.id}`} className="group">
                     <div className="relative aspect-4/5 bg-zinc-100 rounded-2xl overflow-hidden mb-3">
                       {p.images?.[0] ? (
                         <Image src={p.images[0]} alt={p.name} fill 

@@ -187,7 +187,7 @@ export default async function SellerProductsPage({
                           )}
                           {statusKey === "PUBLISHED" && (
                             <Link
-                              href={`/products/${product.id}`}
+                              href={`/products/${product.slug || product.id}`}
                               className="p-2 rounded-lg hover:bg-zinc-100 text-zinc-500 transition-colors text-xs font-semibold"
                               title="View listing"
                             >

@@ -22,6 +22,7 @@ interface Brand { id: string; name: string }
 
 interface FormState {
   name: string;
+  slug: string;
   shortDescription: string;
   description: string;
   price: string;
@@ -39,7 +40,7 @@ interface FormState {
 }
 
 const INITIAL: FormState = {
-  name: "", shortDescription: "", description: "",
+  name: "", slug: "", shortDescription: "", description: "",
   price: "", discountPrice: "", sku: "", stock: "0",
   categoryId: "", subCategoryId: "", childCategoryId: "", brandId: "",
   status: "DRAFT",
@@ -167,6 +168,7 @@ export default function NewProductForm({
       try {
         const fd = new FormData();
         fd.append("name", form.name.trim());
+        if (form.slug) fd.append("slug", slugify(form.slug));
         fd.append("shortDescription", form.shortDescription.trim());
         fd.append("description", form.description.trim());
         fd.append("price", form.price);
@@ -384,10 +386,22 @@ export default function NewProductForm({
                 onChange={handleChange}
                 placeholder="e.g. Premium Wireless Headphones"
               />
-              {form.name && (
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="slug">
+                Custom URL Slug <span className="text-zinc-400 text-xs font-normal">(leave blank to auto-generate)</span>
+              </Label>
+              <Input
+                id="slug"
+                name="slug"
+                value={form.slug}
+                onChange={handleChange}
+                placeholder={form.name ? slugify(form.name) : "e.g. premium-wireless-headphones"}
+              />
+              {form.slug && (
                 <p className="text-xs text-zinc-400">
-                  Slug:{" "}
-                  <span className="font-mono text-zinc-500">{slugify(form.name)}</span>
+                  Will be saved as: <span className="font-mono text-zinc-500">{slugify(form.slug)}</span>
                 </p>
               )}
             </div>
@@ -702,7 +716,7 @@ export default function NewProductForm({
                   {form.seoTitle || form.name}
                 </p>
                 <p className="text-green-700 text-xs">
-                  https://example.com/products/{slugify(form.name)}
+                  https://example.com/products/{form.slug ? slugify(form.slug) : slugify(form.name)}
                 </p>
                 <p className="text-sm text-zinc-500">
                   {form.seoDescription || form.shortDescription || form.description.slice(0, 120)}
