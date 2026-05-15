@@ -13,7 +13,7 @@ import { toast } from "sonner";
 
 export default function CartPage() {
     const [mounted, setMounted] = useState(false);
-    const { items: cartItems, updateQuantity, removeItem, getTotal } = useCartStore();
+    const { items: cartItems, updateQuantity, removeItem, getTotal, syncWithBackend } = useCartStore();
 
     const [coupon, setCoupon] = useState("");
     const [appliedCoupon, setAppliedCoupon] = useState<{ code: string; discountAmount: number } | null>(null);
@@ -21,7 +21,9 @@ export default function CartPage() {
 
     useEffect(() => {
         setMounted(true);
-    }, []);
+        // Sync cart when cart page loads
+        syncWithBackend();
+    }, [syncWithBackend]);
 
     const subtotal = getTotal();
     const discount = appliedCoupon?.discountAmount ?? 0;
@@ -103,15 +105,23 @@ export default function CartPage() {
                                             <div className="mt-auto flex items-center justify-between pt-4">
                                                 <div className="flex items-center border rounded-full overflow-hidden h-10 w-32">
                                                     <button
-                                                        onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                                                        className="flex-1 h-full flex items-center justify-center hover:bg-slate-50 transition-colors text-muted-foreground"
+                                                        onClick={() => {
+                                                            if (item.quantity > 1) {
+                                                                updateQuantity(item.id, item.quantity - 1);
+                                                            } else {
+                                                                removeItem(item.id);
+                                                            }
+                                                        }}
+                                                        className="flex-1 h-full flex items-center justify-center hover:bg-slate-50 transition-colors text-muted-foreground disabled:opacity-50"
+                                                        disabled={item.quantity <= 1}
                                                     >
                                                         <Minus className="w-4 h-4" />
                                                     </button>
                                                     <span className="flex-1 text-center font-medium">{item.quantity}</span>
                                                     <button
                                                         onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                                                        className="flex-1 h-full flex items-center justify-center hover:bg-slate-50 transition-colors text-muted-foreground"
+                                                        className="flex-1 h-full flex items-center justify-center hover:bg-slate-50 transition-colors text-muted-foreground disabled:opacity-50"
+                                                        disabled={item.quantity >= 5}
                                                     >
                                                         <Plus className="w-4 h-4" />
                                                     </button>

@@ -20,7 +20,7 @@ export default function SubmitForReview({ productId }: { productId: string }) {
         toast.error(data.message || "Failed to submit for review");
         return;
       }
-      toast.success("Submitted for admin review");
+      toast.success(data.data?.status === "APPROVED" ? "Product published successfully" : "Submitted for admin review");
       router.refresh();
     });
   };

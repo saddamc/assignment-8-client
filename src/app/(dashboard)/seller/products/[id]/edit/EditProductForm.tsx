@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition, useEffect, useCallback } from "react";
+import { useState, useTransition, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
@@ -23,6 +23,39 @@ interface Variant {
   color: string;
   stock: string;
   price: string;
+}
+
+interface SellerSettings {
+  autoApproveProducts?: boolean;
+  isApproved?: boolean;
+}
+
+interface ProductData {
+  id: string;
+  name?: string;
+  shortDescription?: string;
+  description?: string;
+  price?: number;
+  discountPrice?: number | null;
+  sku?: string | null;
+  stock?: number;
+  categoryId?: string | null;
+  subCategoryId?: string | null;
+  childCategoryId?: string | null;
+  brandId?: string | null;
+  status?: "DRAFT" | "PENDING" | "PUBLISHED" | "REJECTED" | "DISABLED";
+  seoTitle?: string | null;
+  seoDescription?: string | null;
+  seoKeywords?: string[] | string | null;
+  images?: string[];
+  variants?: Array<{
+    id: string;
+    size?: string | null;
+    color?: string | null;
+    stock?: number;
+    price?: number | null;
+  }>;
+  seller?: SellerSettings;
 }
 
 interface FormState {
@@ -56,14 +89,12 @@ function slugify(str: string) {
   return str.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export default function EditProductForm({
   product,
   rootCategories,
   brands,
 }: {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  product: any;
+  product: ProductData;
   rootCategories: Category[];
   brands: Brand[];
 }) {
@@ -99,8 +130,16 @@ export default function EditProductForm({
 
   // Variants (existing + any new ones)
   const [variants, setVariants] = useState<Variant[]>(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (product.variants || []).map((v: any) => ({
+    (product.variants || []).map((v) => ({
+      id:    v.id,
+      size:  v.size  || "",
+      color: v.color || "",
+      stock: v.stock?.toString() || "0",
+      price: v.price?.toString() || "",
+    }))
+  );
+  const initialVariantsRef = useRef<Variant[]>(
+    (product.variants || []).map((v) => ({
       id:    v.id,
       size:  v.size  || "",
       color: v.color || "",
@@ -180,6 +219,55 @@ export default function EditProductForm({
     setNewVariant({ size: "", color: "", stock: "1", price: "" });
   };
 
+  const updateVariantField = (index: number, field: keyof Variant, value: string) => {
+    setVariants((current) => current.map((variant, variantIndex) => (
+      variantIndex === index ? { ...variant, [field]: value } : variant
+    )));
+  };
+
+  const syncVariants = async () => {
+    const initialVariants = initialVariantsRef.current;
+    const removedVariants = initialVariants.filter(
+      (initialVariant) => initialVariant.id && !variants.some((variant) => variant.id === initialVariant.id)
+    );
+
+    const responses = await Promise.all([
+      ...removedVariants.map((variant) =>
+        clientFetch(`/products/${product.id}/variants/${variant.id}`, {
+          method: "DELETE",
+        })
+      ),
+      ...variants.map((variant) => {
+        const payload = {
+          size: variant.size || undefined,
+          color: variant.color || undefined,
+          stock: Number(variant.stock) || 0,
+          price: variant.price ? Number(variant.price) : undefined,
+        };
+
+        if (variant.id) {
+          return clientFetch(`/products/${product.id}/variants/${variant.id}`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          });
+        }
+
+        return clientFetch(`/products/${product.id}/variants`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+      }),
+    ]);
+
+    const failedResponse = responses.find((response) => !response.ok);
+    if (failedResponse) {
+      const errorData = await failedResponse.json().catch(() => null);
+      throw new Error(errorData?.message || "Failed to sync product variants");
+    }
+  };
+
   const validateStep = (): boolean => {
     if (step === 1 && !form.categoryId) { toast.error("Select a main category"); return false; }
     if (step === 2) {
@@ -235,7 +323,17 @@ export default function EditProductForm({
         const data = await res.json();
         if (!res.ok || !data.success) throw new Error(data.message || "Failed to update product");
 
-        toast.success(status === "DRAFT" ? "Saved as draft!" : "Submitted for approval!");
+        await syncVariants();
+
+        const savedStatus = data.data?.status;
+
+        toast.success(
+          status === "DRAFT"
+            ? "Saved as draft!"
+            : savedStatus === "PUBLISHED"
+              ? "Product published successfully!"
+              : "Submitted for approval!"
+        );
         router.push("/seller/products");
         router.refresh();
       } catch (err) {
@@ -453,8 +551,13 @@ export default function EditProductForm({
                 <div className="grid grid-cols-3 sm:grid-cols-5 gap-3">
                   {existingImages.map((src, i) => (
                     <div key={src} className="relative aspect-square rounded-xl overflow-hidden border border-zinc-200 group">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <Image src={src} alt={`Image ${i + 1}`} className="w-full h-full object-cover" />
+                      <Image
+                        src={src}
+                        alt={`Image ${i + 1}`}
+                        fill
+                        sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                        className="object-cover"
+                      />
                       {i === 0 && (
                         <div className="absolute bottom-0 left-0 right-0 bg-indigo-600/80 text-white text-xs text-center py-1">Cover</div>
                       )}
@@ -551,10 +654,18 @@ export default function EditProductForm({
                   <tbody className="divide-y divide-zinc-100">
                     {variants.map((v, i) => (
                       <tr key={v.id || i} className="hover:bg-zinc-50">
-                        <td className="px-4 py-3">{v.size || "—"}</td>
-                        <td className="px-4 py-3">{v.color || "—"}</td>
-                        <td className="px-4 py-3">{v.stock}</td>
-                        <td className="px-4 py-3">{v.price ? `$${v.price}` : "—"}</td>
+                        <td className="px-4 py-3 min-w-32">
+                          <Input value={v.size} onChange={(e) => updateVariantField(i, "size", e.target.value)} placeholder="Size" />
+                        </td>
+                        <td className="px-4 py-3 min-w-32">
+                          <Input value={v.color} onChange={(e) => updateVariantField(i, "color", e.target.value)} placeholder="Color" />
+                        </td>
+                        <td className="px-4 py-3 min-w-24">
+                          <Input value={v.stock} onChange={(e) => updateVariantField(i, "stock", e.target.value)} placeholder="Stock" type="number" min="0" />
+                        </td>
+                        <td className="px-4 py-3 min-w-28">
+                          <Input value={v.price} onChange={(e) => updateVariantField(i, "price", e.target.value)} placeholder="Price" type="number" min="0" step="0.01" />
+                        </td>
                         <td className="px-4 py-3">
                           <button type="button" onClick={() => setVariants((vs) => vs.filter((_, j) => j !== i))} className="text-red-400 hover:text-red-600 transition-colors">
                             <X className="w-4 h-4" />
@@ -607,11 +718,13 @@ export default function EditProductForm({
                 {isPending ? "Saving…" : "Save as Draft"}
               </Button>
               <Button type="button" className="flex-1 gap-2 bg-indigo-600 hover:bg-indigo-500" disabled={isPending} onClick={() => handleSubmit("PENDING")}>
-                {isPending ? "Submitting…" : "Submit for Approval"}
+                {isPending ? "Submitting…" : product.seller?.autoApproveProducts && product.seller?.isApproved ? "Publish Product" : "Submit for Approval"}
               </Button>
             </div>
             <p className="text-xs text-zinc-400 text-center">
-              Edited products require re-approval before changes are live in the marketplace.
+              {product.seller?.autoApproveProducts && product.seller?.isApproved
+                ? "Trusted seller mode is enabled. Publishing will make changes live immediately."
+                : "Edited products require re-approval before changes are live in the marketplace."}
             </p>
           </div>
         )}

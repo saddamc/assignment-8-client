@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useAuthStore } from "@/hooks/useAuthStore";
 import type { AuthUser } from "@/hooks/useAuthStore";
 
@@ -15,8 +15,14 @@ interface Props {
 export default function AuthSync({ user }: Props) {
   const setUser = useAuthStore((s) => s.setUser);
   const clearUser = useAuthStore((s) => s.clearUser);
+  const prevUserIdRef = useRef<string | null | undefined>(undefined);
 
   useEffect(() => {
+    const newId = user?.id ?? null;
+    // Skip if the user ID hasn't changed — prevents repeated cart syncs on re-renders
+    if (newId === prevUserIdRef.current) return;
+    prevUserIdRef.current = newId;
+
     if (user) {
       setUser(user);
     } else {

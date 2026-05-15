@@ -28,12 +28,33 @@ export default function ProductDetailClient({ product, discountedPrice, averageR
   const [selectedColor, setSelectedColor] = useState(0);
   const [selectedSize, setSelectedSize] = useState("M");
   const [wishlisted, setWishlisted] = useState(false);
-  const addItem = useCartStore((s) => s.addItem);
+  const { items } = useCartStore();
+  const existingItem = items.find(item => item.id === product.id);
+  const currentQuantity = existingItem ? existingItem.quantity : 0;
+  const isOutOfStock = !product.stock || product.stock <= 0;
+  const isMaxReached = currentQuantity >= 5;
+  const canAddMore = (product.stock || 0) > currentQuantity && currentQuantity < 5;
 
   const images = product.images?.length > 0 ? product.images : Array(4).fill(null);
 
   const handleAddToCart = () => {
-    if (product.stock === 0) return;
+    // Check stock
+    if (!product.stock || product.stock < quantity) {
+      toast.error("Insufficient stock for this item");
+      return;
+    }
+
+    // Check current cart quantity for this product
+    const { items } = useCartStore.getState();
+    const existingItem = items.find(item => item.id === product.id);
+    const currentQuantity = existingItem ? existingItem.quantity : 0;
+
+    // Check if adding would exceed the limit
+    if (currentQuantity + quantity > 5) {
+      toast.error(`You can only have up to 5 of this item in your cart. You currently have ${currentQuantity} in your cart.`);
+      return;
+    }
+
     addItem(
       {
         id: product.id,
@@ -156,17 +177,23 @@ export default function ProductDetailClient({ product, discountedPrice, averageR
               <Minus className="w-4 h-4" />
             </button>
             <span className="w-10 text-center font-bold">{quantity}</span>
-            <button onClick={() => setQuantity(Math.min(product.stock || 99, quantity + 1))} className="w-12 h-full flex items-center justify-center hover:bg-zinc-50 text-zinc-600 transition-colors">
+            <button onClick={() => {
+              const { items } = useCartStore.getState();
+              const existingItem = items.find(item => item.id === product.id);
+              const currentQuantity = existingItem ? existingItem.quantity : 0;
+              const maxAllowed = Math.min(product.stock || 99, 5 - currentQuantity);
+              setQuantity(Math.min(maxAllowed, quantity + 1));
+            }} className="w-12 h-full flex items-center justify-center hover:bg-zinc-50 text-zinc-600 transition-colors">
               <Plus className="w-4 h-4" />
             </button>
           </div>
           <button
             onClick={handleAddToCart}
-            disabled={product.stock === 0}
+            disabled={!canAddMore}
             className="flex-1 flex items-center justify-center gap-2 h-14 rounded-2xl bg-indigo-600 text-white font-bold text-base hover:bg-indigo-500 active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-[0_0_30px_rgba(79,70,229,0.2)]"
           >
             <ShoppingBag className="w-5 h-5" />
-            {product.stock === 0 ? "Out of Stock" : "Add to Cart"}
+            {isOutOfStock ? "Out of Stock" : isMaxReached ? "Max Limit Reached" : "Add to Cart"}
           </button>
           <button
             onClick={() => { setWishlisted(!wishlisted); toast.success(wishlisted ? "Removed from wishlist" : "Added to wishlist"); }}

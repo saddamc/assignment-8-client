@@ -24,8 +24,10 @@ export default async function ProductsPage({
 }) {
   const params = await searchParams;
   const categoryId = params.categoryId || "";
+  const categoryIdsParam = params.categoryIds || "";
   const categorySlug = params.categorySlug || "";
   const brandId = params.brandId || "";
+  const brandIdsParam = params.brandIds || "";
   const minPrice = params.minPrice || "";
   const maxPrice = params.maxPrice || "";
   const priceRanges = params.priceRanges || "";
@@ -51,12 +53,27 @@ export default async function ProductsPage({
   } catch {}
 
   // Resolve slug to ID when categorySlug is present and no direct categoryId
-  let resolvedCategoryId = categoryId;
-  if (categorySlug && !categoryId) {
+  const resolvedCategoryIds = categoryIdsParam
+    .split(",")
+    .map((id) => id.trim())
+    .filter(Boolean);
+  if (categoryId && !resolvedCategoryIds.includes(categoryId)) {
+    resolvedCategoryIds.push(categoryId);
+  }
+
+  if (categorySlug && resolvedCategoryIds.length === 0) {
     const matched = categories.find(
       (c) => c.slug?.toLowerCase() === categorySlug.toLowerCase()
     );
-    if (matched) resolvedCategoryId = matched.id;
+    if (matched) resolvedCategoryIds.push(matched.id);
+  }
+
+  const resolvedBrandIds = brandIdsParam
+    .split(",")
+    .map((id) => id.trim())
+    .filter(Boolean);
+  if (brandId && !resolvedBrandIds.includes(brandId)) {
+    resolvedBrandIds.push(brandId);
   }
 
   const queryParts: string[] = [
@@ -65,8 +82,12 @@ export default async function ProductsPage({
     `sortBy=${sortBy}`,
     `sortOrder=${sortOrder}`,
   ];
-  if (resolvedCategoryId) queryParts.push(`categoryId=${resolvedCategoryId}`);
-  if (brandId) queryParts.push(`brandId=${brandId}`);
+  if (resolvedCategoryIds.length > 0) {
+    queryParts.push(`categoryIds=${encodeURIComponent(resolvedCategoryIds.join(","))}`);
+  }
+  if (resolvedBrandIds.length > 0) {
+    queryParts.push(`brandIds=${encodeURIComponent(resolvedBrandIds.join(","))}`);
+  }
   if (minPrice) queryParts.push(`minPrice=${minPrice}`);
   if (maxPrice) queryParts.push(`maxPrice=${maxPrice}`);
   if (priceRanges) queryParts.push(`priceRanges=${encodeURIComponent(priceRanges)}`);
@@ -88,7 +109,10 @@ export default async function ProductsPage({
     console.error("Failed to fetch products");
   }
 
-  const activeCategory = categories.find((c) => c.id === resolvedCategoryId);
+  const activeCategory =
+    resolvedCategoryIds.length === 1
+      ? categories.find((c) => c.id === resolvedCategoryIds[0])
+      : undefined;
 
   return (
     <div className="min-h-screen bg-white flex flex-col">
@@ -109,8 +133,8 @@ export default async function ProductsPage({
           total={total}
           currentPage={parseInt(page)}
           currentParams={{
-            categoryIds: resolvedCategoryId ? [resolvedCategoryId] : [],
-            brandIds: brandId ? [brandId] : [],
+            categoryIds: resolvedCategoryIds,
+            brandIds: resolvedBrandIds,
             minPrice,
             maxPrice,
             priceRanges,

@@ -29,26 +29,54 @@ type Order = {
 function SuccessContent() {
     const searchParams = useSearchParams();
     const orderId = searchParams.get("orderId");
+    const sessionId = searchParams.get("session_id");
 
     const [order, setOrder] = useState<Order | null>(null);
     const [loading, setLoading] = useState(true);
     const clearCart = useCartStore((state) => state.clearCart);
+    const setPaymentCompleted = useCartStore((state) => state.setPaymentCompleted);
 
     useEffect(() => {
-        // Always clear local cart on success page
+        // Clear local cart immediately for successful payments
+        // For Stripe: payment completed, clear cart now
+        // For COD: cart was already cleared during order creation
         clearCart();
-    }, [clearCart]);
+        // Mark payment as completed to prevent cart syncing
+        setPaymentCompleted();
+    }, [clearCart, setPaymentCompleted]);
 
     useEffect(() => {
         if (!orderId) { setLoading(false); return; }
-        clientFetch(`/orders/${orderId}`)
-            .then((r) => r.json())
-            .then((d) => {
-                if (d.success) setOrder(d.data);
-            })
-            .catch(() => { /* ignore */ })
-            .finally(() => setLoading(false));
-    }, [orderId]);
+
+        const run = async () => {
+            try {
+                // If we have a Stripe session_id, verify it with the server first
+                // This marks the order as PAID directly (no webhook needed)
+                if (sessionId) {
+                    await clientFetch(`/payments/verify-session/${sessionId}`, { method: 'POST' }).catch(() => {});
+                    // Also clear server cart as backup
+                    clientFetch('/cart', { method: 'DELETE' }).catch(() => {});
+                }
+
+                const r = await clientFetch(`/orders/${orderId}`);
+                const d = await r.json();
+                if (d.success) {
+                    const fetchedOrder = d.data;
+                    // For Stripe, always show PAID on this page (payment was confirmed)
+                    if (fetchedOrder.paymentMethod === "STRIPE") {
+                        fetchedOrder.paymentStatus = "PAID";
+                    }
+                    setOrder(fetchedOrder);
+                }
+            } catch {
+                // ignore
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        run();
+    }, [orderId, sessionId]);
 
     return (
         <div className="min-h-screen bg-slate-50 flex flex-col">

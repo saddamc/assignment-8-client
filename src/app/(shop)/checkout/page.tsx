@@ -91,6 +91,9 @@ export default function CheckoutPage() {
             setAddressesLoading(false);
         };
         fetchAddresses();
+
+        // Sync cart when checkout page loads
+        useCartStore.getState().syncWithBackend();
     }, [mounted]);
 
     const handleSaveNewAddress = async () => {
@@ -158,6 +161,8 @@ export default function CheckoutPage() {
             });
     };
 
+    const selectedAddress = addresses.find(addr => addr.id === selectedAddressId);
+
     const handlePlaceOrder = async () => {
         if (!selectedAddressId && !showNewAddress) {
             toast.error("Please select a delivery address");
@@ -181,6 +186,14 @@ export default function CheckoutPage() {
                     notes: "",
                 }),
             });
+
+            if (orderRes.status === 401) {
+                // Session expired - redirect to login with checkout redirect
+                toast.error("Your session has expired. Please log in to continue.");
+                window.location.href = `/login?redirect=${encodeURIComponent('/checkout')}`;
+                return;
+            }
+
             const orderData = await orderRes.json();
 
             if (!orderData.success) {
@@ -202,6 +215,14 @@ export default function CheckoutPage() {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ orderId }),
             });
+
+            if (sessionRes.status === 401) {
+                // Session expired during payment setup
+                toast.error("Your session has expired. Please log in to continue.");
+                window.location.href = `/login?redirect=${encodeURIComponent('/checkout')}`;
+                return;
+            }
+
             const sessionData = await sessionRes.json();
 
             if (!sessionData.success || !sessionData.data?.url) {
@@ -211,7 +232,8 @@ export default function CheckoutPage() {
             }
 
             window.location.href = sessionData.data.url;
-        } catch {
+        } catch (error) {
+            console.error("Order placement error:", error);
             toast.error("Something went wrong. Please try again.");
             setPlacing(false);
         }
@@ -227,8 +249,6 @@ export default function CheckoutPage() {
             </div>
         );
     }
-
-    const selectedAddress = addresses.find((a) => a.id === selectedAddressId);
 
     return (
         <div className="min-h-screen bg-slate-50 flex flex-col">

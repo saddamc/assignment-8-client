@@ -51,6 +51,9 @@ const paymentStatusColors = {
     REFUNDED: "bg-gray-100 text-gray-800",
 };
 
+const ALL_STATUSES = "ALL_STATUSES";
+const ALL_PAYMENTS = "ALL_PAYMENTS";
+
 export default function AdminOrdersPage() {
     const [orders, setOrders] = useState<Order[]>([]);
     const [loading, setLoading] = useState(true);
@@ -116,12 +119,15 @@ export default function AdminOrdersPage() {
 
             {/* Filters */}
             <div className="flex gap-4">
-                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <Select
+                    value={statusFilter || ALL_STATUSES}
+                    onValueChange={(value) => setStatusFilter(value === ALL_STATUSES ? "" : value)}
+                >
                     <SelectTrigger className="w-48">
                         <SelectValue placeholder="Filter by status" />
                     </SelectTrigger>
                     <SelectContent>
-                        <SelectItem value="">All Statuses</SelectItem>
+                        <SelectItem value={ALL_STATUSES}>All Statuses</SelectItem>
                         <SelectItem value="PENDING">Pending</SelectItem>
                         <SelectItem value="PROCESSING">Processing</SelectItem>
                         <SelectItem value="PACKED">Packed</SelectItem>
@@ -132,12 +138,15 @@ export default function AdminOrdersPage() {
                     </SelectContent>
                 </Select>
 
-                <Select value={paymentFilter} onValueChange={setPaymentFilter}>
+                <Select
+                    value={paymentFilter || ALL_PAYMENTS}
+                    onValueChange={(value) => setPaymentFilter(value === ALL_PAYMENTS ? "" : value)}
+                >
                     <SelectTrigger className="w-48">
                         <SelectValue placeholder="Filter by payment" />
                     </SelectTrigger>
                     <SelectContent>
-                        <SelectItem value="">All Payments</SelectItem>
+                        <SelectItem value={ALL_PAYMENTS}>All Payments</SelectItem>
                         <SelectItem value="PAID">Paid</SelectItem>
                         <SelectItem value="UNPAID">Unpaid</SelectItem>
                         <SelectItem value="FAILED">Failed</SelectItem>

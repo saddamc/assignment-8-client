@@ -8,8 +8,25 @@ import { toast } from "sonner";
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export default function AddToCartButton({ product }: { product: any }) {
     const addItem = useCartStore((state) => state.addItem);
+    const { items } = useCartStore();
 
     const handleAddToCart = () => {
+        // Check if product is in stock
+        if (!product.stock || product.stock <= 0) {
+            toast.error("This product is out of stock");
+            return;
+        }
+
+        // Check current cart quantity for this product
+        const existingItem = items.find(item => item.id === product.id);
+        const currentQuantity = existingItem ? existingItem.quantity : 0;
+
+        // Check if adding would exceed the limit
+        if (currentQuantity >= 5) {
+            toast.error("You can only have up to 5 of this item in your cart");
+            return;
+        }
+
         addItem({
             id: product.id,
             name: product.name,
@@ -20,13 +37,19 @@ export default function AddToCartButton({ product }: { product: any }) {
         toast.success(`Added ${product.name} to cart`);
     };
 
+    const isOutOfStock = !product.stock || product.stock <= 0;
+    const currentQuantity = items.find(item => item.id === product.id)?.quantity || 0;
+    const isMaxReached = currentQuantity >= 5;
+
     return (
-        <Button 
+        <Button
             onClick={handleAddToCart}
-            size="lg" 
-            className="flex-1 rounded-full text-lg h-14 bg-zinc-900 text-white hover:bg-zinc-800"
+            disabled={isOutOfStock || isMaxReached}
+            size="lg"
+            className="flex-1 rounded-full text-lg h-14 bg-zinc-900 text-white hover:bg-zinc-800 disabled:bg-zinc-400 disabled:cursor-not-allowed"
         >
-            <ShoppingBag className="w-5 h-5 mr-2" /> Add to Cart
+            <ShoppingBag className="w-5 h-5 mr-2" />
+            {isOutOfStock ? "Out of Stock" : isMaxReached ? "Max Limit Reached" : "Add to Cart"}
         </Button>
     );
 }

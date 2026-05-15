@@ -215,7 +215,14 @@ export default function NewProductForm({
           );
         }
 
-        toast.success(status === "DRAFT" ? "Saved as draft!" : "Submitted for approval!");
+        const savedStatus = data.data?.status;
+        toast.success(
+          status === "DRAFT"
+            ? "Saved as draft!"
+            : savedStatus === "PUBLISHED"
+              ? "Product published successfully!"
+              : "Submitted for approval!"
+        );
         router.push("/seller/products");
         router.refresh();
       } catch (err) {
@@ -233,7 +240,7 @@ export default function NewProductForm({
           const done = step > s.id;
           const active = step === s.id;
           return (
-            <div key={s.id} className="flex items-center flex-shrink-0">
+            <div key={s.id} className="flex items-center shrink-0">
               <button
                 type="button"
                 onClick={() => done && setStep(s.id)}
@@ -250,7 +257,7 @@ export default function NewProductForm({
               </button>
               {idx < STEPS.length - 1 && (
                 <ChevronRight
-                  className={`w-4 h-4 mx-1 flex-shrink-0 ${done ? "text-emerald-400" : "text-zinc-300"}`}
+                  className={`w-4 h-4 mx-1 shrink-0 ${done ? "text-emerald-400" : "text-zinc-300"}`}
                 />
               )}
             </div>
@@ -723,7 +730,7 @@ export default function NewProductForm({
               </Button>
             </div>
             <p className="text-xs text-zinc-400 text-center">
-              Products require admin approval before they are published to the marketplace.
+              Products may require admin approval before they are published to the marketplace. Trusted sellers can be auto-published.
             </p>
           </div>
         )}

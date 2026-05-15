@@ -44,8 +44,8 @@ export const useAuthStore = create<AuthState>()(
 
       clearUser: () => {
         set({ user: null, isAuthenticated: false });
-        // Clear synced cart items when user logs out
-        useCartStore.getState().clearCart();
+        // Don't clear cart on logout - it should persist on server
+        // useCartStore.getState().clearCart();
       },
     }),
     {

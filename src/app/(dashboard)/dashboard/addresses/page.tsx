@@ -3,6 +3,7 @@ import { MapPin, Plus } from "lucide-react";
 import Link from "next/link";
 import { getCurrentUser } from "@/services/auth/getCurrentUser";
 import { redirect } from "next/navigation";
+import AddressActions from "./AddressActions";
 
 type Address = {
   id: string;
@@ -54,11 +55,17 @@ export default async function AddressesPage() {
           <MapPin className="w-12 h-12 text-zinc-200 mb-4" />
           <h3 className="text-lg font-bold mb-2">No addresses saved</h3>
           <p className="text-zinc-400 text-sm mb-6">Add a delivery address for faster checkout.</p>
+          <Link
+            href="/dashboard/addresses/new"
+            className="flex items-center gap-2 px-5 py-2.5 bg-indigo-600 text-white text-sm font-bold rounded-xl hover:bg-indigo-500 transition-colors"
+          >
+            <Plus className="w-4 h-4" /> Add First Address
+          </Link>
         </div>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2">
           {addresses.map((addr) => (
-            <div key={addr.id} className={`bg-white rounded-2xl border shadow-sm p-6 relative ${addr.isDefault ? "border-indigo-300" : "border-zinc-100"}`}>
+            <div key={addr.id} className={`bg-white rounded-2xl border shadow-sm p-6 relative ${addr.isDefault ? "border-indigo-300 ring-1 ring-indigo-200" : "border-zinc-100"}`}>
               {addr.isDefault && (
                 <span className="absolute top-4 right-4 text-xs font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full">Default</span>
               )}
@@ -68,12 +75,7 @@ export default async function AddressesPage() {
               <p className="text-sm text-zinc-500 mt-1">{addr.line1}{addr.line2 ? `, ${addr.line2}` : ""}</p>
               <p className="text-sm text-zinc-500">{addr.city}, {addr.state} {addr.postalCode}</p>
               <p className="text-sm text-zinc-500">{addr.country}</p>
-              <div className="flex gap-3 mt-4">
-                <Link href={`/dashboard/addresses/${addr.id}/edit`} className="text-xs font-bold text-indigo-600 hover:underline">Edit</Link>
-                {!addr.isDefault && (
-                  <Link href={`/dashboard/addresses/${addr.id}/set-default`} className="text-xs font-bold text-zinc-400 hover:text-zinc-700">Set Default</Link>
-                )}
-              </div>
+              <AddressActions id={addr.id} isDefault={addr.isDefault} />
             </div>
           ))}
         </div>

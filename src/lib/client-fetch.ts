@@ -72,6 +72,11 @@ export const clientFetch = async (
 
   if (res.status !== 401) return res;
 
+  // Don't auto-refresh/redirect for checkout payment endpoints - let the component handle it
+  if (endpoint === "/orders" || endpoint === "/payments/create-checkout-session") {
+    return res;
+  }
+
   // Try to refresh the access token
   const refreshed = await triggerRefresh();
   if (!refreshed) {

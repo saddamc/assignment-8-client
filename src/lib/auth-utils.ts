@@ -23,7 +23,7 @@ export const sellerProtectedRoutes: RouteConfig = {
 }
 
 export const customerProtectedRoutes: RouteConfig = {
-    patterns: [/^\/dashboard/, /^\/cart/, /^\/checkout/], 
+    patterns: [/^\/dashboard/, /^\/cart/, /^\/checkout(?!\/success)/], 
     exact: [], 
 }
 
