@@ -7,7 +7,7 @@ import AdminRevenueChart from "./AdminRevenueChart";
 type Stats = any;
 
 const MOCK_STATS: Stats = {
-  overview: { totalRevenue: 124500, totalOrders: 1847, totalCustomers: 8432, totalProducts: 356, pendingOrders: 24, lowStockProducts: 8 },
+  overview: { totalRevenue: 0, totalOrders: 0, totalCustomers: 0, totalProducts: 0, pendingOrders: 0, lowStockProducts: 0 },
   recentOrders: [],
   topProducts: [],
   lowStockProducts: [],

@@ -29,11 +29,11 @@ const MOCK_PRODUCT: ProductType = {
 export async function generateMetadata({
   params,
 }: {
-  params: Promise<{ id: string }>;
+  params: Promise<{ slug: string }>;
 }) {
-  const { id } = await params;
+  const { slug } = await params;
   try {
-    const res = await serverFetch.get(`/products/${id}`);
+    const res = await serverFetch.get(`/products/${slug}`);
     const data = await res.json();
     const product = data?.data;
     if (product) {
@@ -51,22 +51,22 @@ export async function generateMetadata({
   return { title: "Product | Cabro" };
 }
 
-export default async function ProductDetailsPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
+export default async function ProductDetailsPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
 
   let product: ProductType = null;
   let relatedProducts: ProductType[] = [];
 
   try {
-    const res = await serverFetch.get(`/products/${id}`);
+    const res = await serverFetch.get(`/products/${slug}`);
     const data = await res.json();
     if (data.success) product = data.data;
   } catch { /* fall through to mock */ }
 
   if (!product) {
-    if (id !== "mock") {
+    if (slug !== "mock") {
       // Return mock for demo without 404
-      product = { ...MOCK_PRODUCT, id };
+      product = { ...MOCK_PRODUCT, id: slug };
     } else {
       notFound();
     }
@@ -85,9 +85,12 @@ export default async function ProductDetailsPage({ params }: { params: Promise<{
     ? product.reviews.reduce((a: number, r: ProductType) => a + r.rating, 0) / product.reviews.length
     : 0;
 
-  const discountedPrice = product.discount
-    ? product.price * (1 - product.discount / 100)
-    : null;
+  const discountedPrice =
+    typeof product.discountPrice === "number" && product.discountPrice > 0 && product.discountPrice < product.price
+      ? product.discountPrice
+      : product.discount
+        ? product.price * (1 - product.discount / 100)
+        : null;
 
   return (
     <div className="min-h-screen bg-white flex flex-col">

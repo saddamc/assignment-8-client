@@ -92,7 +92,7 @@ export default async function WishlistPage() {
                   </div>
 
                   <Link
-                    href={`/products/${product.id}`}
+                    href={`/products/${product.slug || product.id}`}
                     className="block w-full text-center py-2.5 rounded-xl bg-zinc-900 text-white text-xs font-bold hover:bg-zinc-700 transition-colors"
                   >
                     View Product

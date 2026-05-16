@@ -32,11 +32,11 @@ const ChartContainer = React.forwardRef<
 >(({ className, config, style, children, ...props }, ref) => {
     const chartStyle = Object.entries(config).reduce((acc, [key, value]) => {
         if (value.color) {
-            acc[`--color-${key}` as keyof React.CSSProperties] = value.color;
+            (acc as React.CSSProperties & Record<string, string>)[`--color-${key}`] = value.color;
         }
 
         return acc;
-    }, {} as React.CSSProperties);
+    }, {} as React.CSSProperties & Record<string, string>);
 
     return (
         <ChartContext.Provider value={{ config }}>

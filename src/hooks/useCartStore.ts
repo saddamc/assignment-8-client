@@ -7,15 +7,41 @@ import { toast } from 'sonner';
 // Dedup: if a sync is already in-flight, return the same promise instead of firing a second request
 let pendingSync: Promise<void> | null = null;
 
+const getFinalProductPrice = (product: {
+    price: number;
+    discountPrice?: number | null;
+    discount?: number | null;
+}) => {
+    if (
+        typeof product.discountPrice === "number" &&
+        product.discountPrice > 0 &&
+        product.discountPrice < product.price
+    ) {
+        return product.discountPrice;
+    }
+
+    if (typeof product.discount === "number" && product.discount > 0) {
+        return product.price * (1 - product.discount / 100);
+    }
+
+    return product.price;
+};
+
 export interface CartItem {
     id: string; // product id for local compatibility
+    productId: string;
     name: string;
     price: number;
     image: string;
     category: string;
+    slug?: string;
+    size?: string;
+    variantId?: string;
     quantity: number;
     cartItemId?: string; // backend cart item id
 }
+
+const getLineKey = (productId: string, size?: string) => `${productId}::${(size || "").trim()}`;
 
 interface CartState {
     items: CartItem[];
@@ -45,24 +71,38 @@ export const useCartStore = create<CartState>()(
                 if (!authStore.isAuthenticated || authStore.user?.role !== "CUSTOMER") {
                     // Fallback to local storage if not authenticated or not a customer
                     set((state) => {
-                        const existingItem = state.items.find(item => item.id === newItem.id);
+                        const lineId = getLineKey(newItem.id, newItem.size);
+                        const existingItem = state.items.find(item => item.id === lineId);
                         if (existingItem) {
                             return {
                                 items: state.items.map(item =>
-                                    item.id === newItem.id
+                                    item.id === lineId
                                         ? { ...item, quantity: item.quantity + quantity }
                                         : item
                                 )
                             };
                         }
-                        return { items: [...state.items, { ...newItem, quantity }] };
+                        return {
+                            items: [
+                                ...state.items,
+                                {
+                                    ...newItem,
+                                    id: lineId,
+                                    productId: newItem.id,
+                                    quantity
+                                }
+                            ]
+                        };
                     });
                     return;
                 }
 
                 try {
                     set({ isLoading: true });
-                    await cartService.addToCart(newItem.id, quantity);
+                    await cartService.addToCart(newItem.id, quantity, {
+                        size: newItem.size,
+                        variantId: newItem.variantId,
+                    });
                     await get().syncWithBackend();
                     toast.success("Item added to cart!");
                 } catch (error: any) {
@@ -187,11 +227,15 @@ export const useCartStore = create<CartState>()(
                     try {
                         const cart = await cartService.getMyCart();
                         const serverItems: CartItem[] = cart.items.map((item: APICartItem) => ({
-                            id: item.productId,
+                            id: getLineKey(item.productId, item.size),
+                            productId: item.productId,
                             name: item.product.name,
-                            price: item.product.price,
+                            price: getFinalProductPrice(item.product),
                             image: item.product.images[0] || '',
                             category: item.product.category.name,
+                            slug: item.product.slug ?? undefined,
+                            size: item.size || undefined,
+                            variantId: item.variantId || undefined,
                             quantity: item.quantity,
                             cartItemId: item.id,
                         }));
@@ -204,7 +248,10 @@ export const useCartStore = create<CartState>()(
                         if (localItems.length > 0) {
                             for (const localItem of localItems) {
                                 try {
-                                    await cartService.addToCart(localItem.id, localItem.quantity);
+                                    await cartService.addToCart(localItem.productId, localItem.quantity, {
+                                        size: localItem.size,
+                                        variantId: localItem.variantId,
+                                    });
                                 } catch (error) {
                                     console.error("Failed to sync local item to server:", error);
                                     // If sync fails, keep the local item
@@ -214,11 +261,15 @@ export const useCartStore = create<CartState>()(
                             // Refetch cart after syncing local items
                             const updatedCart = await cartService.getMyCart();
                             const updatedServerItems: CartItem[] = updatedCart.items.map((item: APICartItem) => ({
-                                id: item.productId,
+                                id: getLineKey(item.productId, item.size),
+                                productId: item.productId,
                                 name: item.product.name,
-                                price: item.product.price,
+                                price: getFinalProductPrice(item.product),
                                 image: item.product.images[0] || '',
                                 category: item.product.category.name,
+                                slug: item.product.slug ?? undefined,
+                                size: item.size || undefined,
+                                variantId: item.variantId || undefined,
                                 quantity: item.quantity,
                                 cartItemId: item.id,
                             }));

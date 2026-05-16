@@ -72,10 +72,11 @@ interface FormState {
   subCategoryId: string;
   childCategoryId: string;
   brandId: string;
-  status: "DRAFT" | "PENDING" | "PUBLISHED";
+  status: "DRAFT" | "PENDING" | "PUBLISHED" | "REJECTED" | "DISABLED";
   seoTitle: string;
   seoDescription: string;
   seoKeywords: string;
+  shippingCost: string;
 }
 
 const STEPS = [
@@ -123,6 +124,7 @@ export default function EditProductForm({
     seoKeywords:      Array.isArray(product.seoKeywords)
                         ? product.seoKeywords.join(", ")
                         : (product.seoKeywords || ""),
+    shippingCost:     (product as any).shippingCost != null ? String((product as any).shippingCost) : "",
   });
 
   // Existing images from Cloudinary — can be individually removed
@@ -184,11 +186,13 @@ export default function EditProductForm({
 
   // Load initial subcategories based on product's existing category
   useEffect(() => {
-    if (form.categoryId) loadSubcategories(form.categoryId);
+    const load = async () => { if (form.categoryId) await loadSubcategories(form.categoryId); };
+    load();
   }, [form.categoryId, loadSubcategories]);
 
   useEffect(() => {
-    if (form.subCategoryId) loadChildCategories(form.subCategoryId);
+    const load = async () => { if (form.subCategoryId) await loadChildCategories(form.subCategoryId); };
+    load();
   }, [form.subCategoryId, loadChildCategories]);
 
   const handleChange = (
@@ -279,6 +283,10 @@ export default function EditProductForm({
     }
     if (step === 3) {
       if (!form.price || Number(form.price) <= 0) { toast.error("Valid price required"); return false; }
+      if (form.discountPrice) {
+        if (Number(form.discountPrice) <= 0) { toast.error("Discount price must be positive"); return false; }
+        if (Number(form.discountPrice) >= Number(form.price)) { toast.error("Discount price must be lower than regular price"); return false; }
+      }
       if (!form.stock || Number(form.stock) < 0) { toast.error("Valid stock required"); return false; }
     }
     return true;
@@ -299,6 +307,7 @@ export default function EditProductForm({
         if (form.discountPrice) fd.append("discountPrice", form.discountPrice);
         if (form.sku) fd.append("sku", form.sku.trim());
         fd.append("stock", form.stock);
+        if (form.shippingCost) fd.append("shippingCost", form.shippingCost);
         fd.append("status", status);
         if (form.categoryId) fd.append("categoryId", form.categoryId);
         if (form.subCategoryId) fd.append("subCategoryId", form.subCategoryId);
@@ -549,6 +558,26 @@ export default function EditProductForm({
                 <Label htmlFor="stock">Stock Quantity *</Label>
                 <Input id="stock" name="stock" type="number" min="0" value={form.stock} onChange={handleChange} />
               </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="shippingCost">
+                Shipping Cost (৳){" "}
+                <span className="text-zinc-400 text-xs">optional — overrides global rules for this product</span>
+              </Label>
+              <Input
+                id="shippingCost"
+                name="shippingCost"
+                type="number"
+                min="0"
+                step="1"
+                value={form.shippingCost}
+                onChange={handleChange}
+                placeholder="e.g. 60"
+              />
+              <p className="text-xs text-zinc-400">
+                Leave empty to use your category-level rule or global location pricing.
+              </p>
             </div>
           </div>
         )}

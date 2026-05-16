@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { useState, useEffect } from "react";
@@ -52,6 +53,8 @@ export default function CheckoutPage() {
 
     // Payment step
     const [paymentMethod, setPaymentMethod] = useState<"STRIPE" | "COD">("STRIPE");
+    const [shippingFee, setShippingFee] = useState<number>(0);
+    const [shippingLoading, setShippingLoading] = useState(false);
 
     // Coupon
     const [coupon, setCoupon] = useState("");
@@ -62,8 +65,7 @@ export default function CheckoutPage() {
 
     const subtotal = getTotal();
     const discount = appliedCoupon?.discountAmount ?? 0;
-    const taxes = subtotal * 0.1; // 10% tax
-    const total = Math.max(subtotal - discount, 0);
+    const total = Math.max(subtotal - discount + shippingFee, 0);
 
     useEffect(() => {
         setMounted(true);
@@ -162,6 +164,32 @@ export default function CheckoutPage() {
     };
 
     const selectedAddress = addresses.find(addr => addr.id === selectedAddressId);
+
+    useEffect(() => {
+        if (!mounted || !selectedAddressId) {
+            setShippingFee(0);
+            return;
+        }
+
+        const fetchShipping = async () => {
+            setShippingLoading(true);
+            try {
+                const res = await clientFetch(`/orders/shipping-quote?addressId=${encodeURIComponent(selectedAddressId)}`);
+                const data = await res.json();
+                if (res.ok && data.success) {
+                    setShippingFee(Number(data.data?.shippingAmount || 0));
+                } else {
+                    setShippingFee(0);
+                }
+            } catch {
+                setShippingFee(0);
+            } finally {
+                setShippingLoading(false);
+            }
+        };
+
+        void fetchShipping();
+    }, [mounted, selectedAddressId]);
 
     const handlePlaceOrder = async () => {
         if (!selectedAddressId && !showNewAddress) {
@@ -527,6 +555,9 @@ export default function CheckoutPage() {
                                         </div>
                                         <div className="flex-1 text-sm">
                                             <p className="font-semibold leading-tight line-clamp-2 mb-0.5">{item.name}</p>
+                                            {item.size && (
+                                                <p className="text-muted-foreground text-xs">Size: {item.size}</p>
+                                            )}
                                             <p className="text-muted-foreground text-xs">Qty: {item.quantity} × ${item.price.toFixed(2)}</p>
                                         </div>
                                         <div className="font-bold text-sm shrink-0">
@@ -543,11 +574,7 @@ export default function CheckoutPage() {
                                 </div>
                                 <div className="flex justify-between">
                                     <span className="text-muted-foreground">Shipping</span>
-                                    <span className="font-medium text-green-600">Free</span>
-                                </div>
-                                <div className="flex justify-between">
-                                    <span className="text-muted-foreground">Taxes</span>
-                                    <span className="font-medium">${taxes.toFixed(2)}</span>
+                                    <span className="font-medium">{shippingLoading ? "Calculating..." : `$${shippingFee.toFixed(2)}`}</span>
                                 </div>
                                 {discount > 0 && (
                                     <div className="flex justify-between text-green-600">

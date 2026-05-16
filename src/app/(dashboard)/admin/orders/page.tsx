@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Eye, Truck, CheckCircle, XCircle } from "lucide-react";
+import { Eye } from "lucide-react";
 import { clientFetch } from "@/lib/client-fetch";
 import { toast } from "sonner";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -65,9 +65,9 @@ export default function AdminOrdersPage() {
         fetchOrders();
     }, [statusFilter, paymentFilter]);
 
-    const fetchOrders = async () => {
+    async function fetchOrders() {
         try {
-            const filters: any = {};
+            const filters: Record<string, unknown> = {};
             if (statusFilter) filters.status = statusFilter;
             if (paymentFilter) filters.paymentStatus = paymentFilter;
 

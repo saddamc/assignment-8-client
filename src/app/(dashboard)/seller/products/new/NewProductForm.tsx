@@ -37,6 +37,7 @@ interface FormState {
   seoTitle: string;
   seoDescription: string;
   seoKeywords: string;
+  shippingCost: string;
 }
 
 const INITIAL: FormState = {
@@ -45,6 +46,7 @@ const INITIAL: FormState = {
   categoryId: "", subCategoryId: "", childCategoryId: "", brandId: "",
   status: "DRAFT",
   seoTitle: "", seoDescription: "", seoKeywords: "",
+  shippingCost: "",
 };
 
 const STEPS = [
@@ -155,6 +157,10 @@ export default function NewProductForm({
     }
     if (step === 3) {
       if (!form.price || Number(form.price) <= 0) { toast.error("Valid price required"); return false; }
+      if (form.discountPrice) {
+        if (Number(form.discountPrice) <= 0) { toast.error("Discount price must be positive"); return false; }
+        if (Number(form.discountPrice) >= Number(form.price)) { toast.error("Discount price must be lower than regular price"); return false; }
+      }
       if (!form.stock || Number(form.stock) < 0) { toast.error("Valid stock required"); return false; }
     }
     return true;
@@ -175,6 +181,7 @@ export default function NewProductForm({
         if (form.discountPrice) fd.append("discountPrice", form.discountPrice);
         if (form.sku) fd.append("sku", form.sku.trim());
         fd.append("stock", form.stock);
+        if (form.shippingCost) fd.append("shippingCost", form.shippingCost);
         fd.append("status", status);
         if (form.categoryId) fd.append("categoryId", form.categoryId);
         if (form.subCategoryId) fd.append("subCategoryId", form.subCategoryId);
@@ -521,6 +528,26 @@ export default function NewProductForm({
                   onChange={handleChange}
                 />
               </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="shippingCost">
+                Shipping Cost (৳){" "}
+                <span className="text-zinc-400 text-xs">optional — overrides global rules for this product</span>
+              </Label>
+              <Input
+                id="shippingCost"
+                name="shippingCost"
+                type="number"
+                min="0"
+                step="1"
+                value={form.shippingCost}
+                onChange={handleChange}
+                placeholder="e.g. 60 for Dhaka, 100 for others"
+              />
+              <p className="text-xs text-zinc-400">
+                Leave empty to use your category-level rule or global location pricing.
+              </p>
             </div>
           </div>
         )}

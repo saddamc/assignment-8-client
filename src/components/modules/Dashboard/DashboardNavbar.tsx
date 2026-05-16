@@ -3,9 +3,12 @@ import { getNavItemsByRole } from "@/lib/navItems.config";
 import { getCurrentUser } from "@/services/auth/getCurrentUser";
 import { AuthUser } from "@/hooks/useAuthStore";
 import DashboardNavbarContent from "./DashboardNavbarContent";
+import { redirect } from "next/navigation";
 
 const DashboardNavbar = async () => {
     const user = (await getCurrentUser()) as AuthUser;
+    if (!user) redirect("/login");
+
     const navItems = getNavItemsByRole(user.role);
     const dashboardHome = getDefaultDashboardRoute(user.role);
 

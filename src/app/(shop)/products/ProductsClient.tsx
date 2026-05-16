@@ -1,6 +1,7 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import { useState, useTransition, useRef, useMemo } from "react";
+import { useState, useTransition } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
@@ -14,7 +15,6 @@ import {
   Search,
   ChevronDown,
   ChevronUp,
-  Check,
   Zap,
 } from "lucide-react";
 import { useCartStore } from "@/hooks/useCartStore";
@@ -36,6 +36,7 @@ interface Brand {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Product = any;
+type VariantAction = "cart" | "order";
 
 interface Props {
   initialProducts: Product[];
@@ -191,6 +192,17 @@ export default function ProductsClient({
   const router = useRouter();
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [variantModal, setVariantModal] = useState<{
+    open: boolean;
+    product: Product | null;
+    action: VariantAction;
+    selectedSize: string;
+  }>({
+    open: false,
+    product: null,
+    action: "cart",
+    selectedSize: "",
+  });
   const [, startTransition] = useTransition();
   const addItem = useCartStore((s) => s.addItem);
   
@@ -271,17 +283,122 @@ export default function ProductsClient({
     updateParams({ searchTerm: e.target.value, page: "1" });
   };
 
+  const getVariantSizeOptions = (product: Product) => {
+    const variants = Array.isArray(product?.variants) ? product.variants : [];
+    const sizeMap = new Map<string, { size: string; stock: number; price?: number }>();
+
+    for (const variant of variants) {
+      const size = String(variant?.size || "").trim();
+      if (!size) continue;
+
+      const existing = sizeMap.get(size);
+      const stock = Number(variant?.stock || 0);
+      const price = typeof variant?.price === "number" ? Number(variant.price) : undefined;
+
+      if (!existing) {
+        sizeMap.set(size, { size, stock, price });
+      } else {
+        sizeMap.set(size, {
+          size,
+          stock: existing.stock + stock,
+          price: existing.price ?? price,
+        });
+      }
+    }
+
+    return Array.from(sizeMap.values());
+  };
+
+  const getBaseFinalPrice = (product: Product) => (
+    typeof product.discountPrice === "number" && product.discountPrice > 0 && product.discountPrice < product.price
+      ? product.discountPrice
+      : product.price
+  );
+
+  const openVariantModal = (product: Product, action: VariantAction) => {
+    setVariantModal({
+      open: true,
+      product,
+      action,
+      selectedSize: "",
+    });
+  };
+
+  const closeVariantModal = () => {
+    setVariantModal({
+      open: false,
+      product: null,
+      action: "cart",
+      selectedSize: "",
+    });
+  };
+
+  const executeProductAction = async (product: Product, action: VariantAction, selectedSize?: string) => {
+    const variantOptions = getVariantSizeOptions(product);
+    const hasVariantSizes = variantOptions.length > 0;
+
+    if (hasVariantSizes && !selectedSize) {
+      toast.error("Please select a size");
+      return;
+    }
+
+    const selectedVariant = hasVariantSizes
+      ? variantOptions.find((option) => option.size === selectedSize)
+      : undefined;
+
+    if (selectedVariant && selectedVariant.stock <= 0) {
+      toast.error("Selected size is out of stock");
+      return;
+    }
+
+    const baseFinalPrice = getBaseFinalPrice(product);
+    const finalPrice =
+      typeof selectedVariant?.price === "number" && selectedVariant.price > 0
+        ? selectedVariant.price
+        : baseFinalPrice;
+
+    await addItem({
+      id: product.id,
+      productId: product.id,
+      name: product.name,
+      price: finalPrice,
+      image: product.images?.[0] || "",
+      category: product.category?.name || "",
+      size: selectedSize,
+    });
+
+    if (action === "order") {
+      router.push("/checkout");
+      return;
+    }
+
+    toast.success(`${product.name} added to cart`);
+  };
+
   const handleAddToCart = (e: React.MouseEvent, product: Product) => {
     e.preventDefault();
     e.stopPropagation();
-    addItem({
-      id: product.id,
-      name: product.name,
-      price: product.discount ? product.price * (1 - product.discount / 100) : product.price,
-      image: product.images?.[0] || "",
-      category: product.category?.name || "",
-    });
-    toast.success(`${product.name} added to cart`);
+
+    const hasVariantSizes = getVariantSizeOptions(product).length > 0;
+    if (hasVariantSizes) {
+      openVariantModal(product, "cart");
+      return;
+    }
+
+    void executeProductAction(product, "cart");
+  };
+
+  const handleOrderNow = (e: React.MouseEvent, product: Product) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const hasVariantSizes = getVariantSizeOptions(product).length > 0;
+    if (hasVariantSizes) {
+      openVariantModal(product, "order");
+      return;
+    }
+
+    router.push(`/checkout?product=${product.id}`);
   };
 
   const activeChips: { label: string; onRemove: () => void }[] = [];
@@ -475,6 +592,76 @@ export default function ProductsClient({
 
   return (
     <>
+      {variantModal.open && variantModal.product && (
+        <>
+          <div
+            className="fixed inset-0 z-[70] bg-black/55 backdrop-blur-[1px]"
+            onClick={closeVariantModal}
+          />
+          <div className="fixed inset-0 z-[71] flex items-center justify-center p-4">
+            <div
+              role="dialog"
+              aria-modal="true"
+              aria-label="Select size"
+              className="w-full max-w-md rounded-2xl bg-white p-6 shadow-[0_20px_80px_rgba(0,0,0,0.25)]"
+            >
+              <div className="mb-4 flex items-start justify-between gap-3">
+                <div>
+                  <h3 className="text-lg font-bold text-black">Select Size</h3>
+                  <p className="mt-1 text-sm text-black/55">{variantModal.product.name}</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={closeVariantModal}
+                  className="rounded-full p-1.5 text-black/50 transition hover:bg-black/5 hover:text-black"
+                  aria-label="Close size selector"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+
+              <div className="mb-5 grid grid-cols-3 gap-2">
+                {getVariantSizeOptions(variantModal.product).map((option) => {
+                  const selected = variantModal.selectedSize === option.size;
+                  const disabled = option.stock <= 0;
+
+                  return (
+                    <button
+                      key={option.size}
+                      type="button"
+                      disabled={disabled}
+                      onClick={() => setVariantModal((prev) => ({ ...prev, selectedSize: option.size }))}
+                      className={`rounded-xl border px-3 py-2 text-sm font-semibold transition ${
+                        selected
+                          ? "border-black bg-black text-white"
+                          : "border-[#d7dde5] bg-white text-black hover:border-black"
+                      } ${disabled ? "cursor-not-allowed opacity-35" : ""}`}
+                    >
+                      {option.size}
+                    </button>
+                  );
+                })}
+              </div>
+
+              <button
+                type="button"
+                onClick={async () => {
+                  const currentProduct = variantModal.product;
+                  const currentAction = variantModal.action;
+                  const currentSize = variantModal.selectedSize;
+                  await executeProductAction(currentProduct, currentAction, currentSize);
+                  closeVariantModal();
+                }}
+                disabled={!variantModal.selectedSize}
+                className="w-full rounded-xl bg-black py-3 text-sm font-bold text-white transition hover:bg-black/85 disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                {variantModal.action === "order" ? "Continue to Checkout" : "Add to Cart"}
+              </button>
+            </div>
+          </div>
+        </>
+      )}
+
       {/* Mobile drawer */}
       <div className={`fixed inset-0 z-40 bg-black/40 backdrop-blur-sm transition-opacity ${mobileOpen ? "opacity-100" : "pointer-events-none opacity-0"}`} onClick={() => setMobileOpen(false)} />
       <div className={`fixed bottom-0 left-0 right-0 z-50 max-h-[85dvh] overflow-y-auto rounded-t-3xl bg-white px-5 pb-8 pt-4 shadow-[0_-20px_60px_rgba(15,23,42,0.18)] transition-transform duration-300 ${mobileOpen ? "translate-y-0" : "translate-y-full"}`}>
@@ -592,7 +779,15 @@ export default function ProductsClient({
                   const avg = product.reviews?.length
                     ? product.reviews.reduce((a: number, r: { rating: number }) => a + r.rating, 0) / product.reviews.length
                     : null;
-                  const discountedPrice = product.discount ? product.price * (1 - product.discount / 100) : null;
+                  const discountedPrice =
+                    typeof product.discountPrice === "number" && product.discountPrice > 0 && product.discountPrice < product.price
+                      ? product.discountPrice
+                      : product.discount > 0
+                        ? product.price * (1 - product.discount / 100)
+                        : null;
+                  const discountPercent = discountedPrice
+                    ? Math.max(1, Math.round(((product.price - discountedPrice) / product.price) * 100))
+                    : 0;
                   const inStock = product.stock > 0;
                   const image = product.images?.[0] || "https://placehold.co/800x1000/f3f4f6/999.png?text=Product";
 
@@ -612,9 +807,9 @@ export default function ProductsClient({
 
                         {/* Badges */}
                         <div className="pointer-events-none absolute left-3 top-3 z-10 flex flex-col gap-1.5">
-                          {product.discount > 0 && (
-                            <span className="rounded-full bg-black px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-white shadow-sm">
-                              -{product.discount}% Sale
+                          {discountPercent > 0 && (
+                            <span className="rounded-full bg-red-400 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-white shadow-sm">
+                              -{discountPercent}% OFF
                             </span>
                           )}
                           {!inStock && (
@@ -637,6 +832,7 @@ export default function ProductsClient({
                             </button>
                             <Link
                               href={`/checkout?product=${product.id}`}
+                              onClick={(e) => handleOrderNow(e, product)}
                               className={`flex h-9 flex-1 items-center justify-center gap-1.5 rounded-xl border-2 border-black text-[12px] font-bold text-black transition hover:bg-black hover:text-white ${!inStock ? "pointer-events-none opacity-40" : ""}`}
                             >
                               <Zap className="h-3.5 w-3.5" /> Order Now

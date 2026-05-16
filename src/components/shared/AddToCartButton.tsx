@@ -18,7 +18,7 @@ export default function AddToCartButton({ product }: { product: any }) {
         }
 
         // Check current cart quantity for this product
-        const existingItem = items.find(item => item.id === product.id);
+        const existingItem = items.find(item => item.productId === product.id);
         const currentQuantity = existingItem ? existingItem.quantity : 0;
 
         // Check if adding would exceed the limit
@@ -29,6 +29,7 @@ export default function AddToCartButton({ product }: { product: any }) {
 
         addItem({
             id: product.id,
+            productId: product.id,
             name: product.name,
             price: product.price,
             image: product.images?.[0] || '',
@@ -38,7 +39,7 @@ export default function AddToCartButton({ product }: { product: any }) {
     };
 
     const isOutOfStock = !product.stock || product.stock <= 0;
-    const currentQuantity = items.find(item => item.id === product.id)?.quantity || 0;
+    const currentQuantity = items.find(item => item.productId === product.id)?.quantity || 0;
     const isMaxReached = currentQuantity >= 5;
 
     return (

@@ -80,7 +80,7 @@ function ProductCard({ product, index }: { product: any; index: number }) {
   const discountedPrice = product.discount ? product.price * (1 - product.discount / 100) : null;
 
   return (
-    <Link href={`/products/${product.id}`} style={{ textDecoration: "none", color: "inherit" }}>
+    <Link href={`/products/${product.slug || product.id}`} style={{ textDecoration: "none", color: "inherit" }}>
       <div className="hz-prod-card" style={{
         background: "#fff", borderRadius: 8, overflow: "hidden",
         border: "1px solid #ddd", transition: "box-shadow 0.2s",

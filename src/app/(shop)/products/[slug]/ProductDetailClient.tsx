@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import { ZoomIn, ShoppingBag, Minus, Plus, Heart, ShieldCheck, Truck, RefreshCcw, Zap, Star } from "lucide-react";
 import { useCartStore } from "@/hooks/useCartStore";
@@ -26,10 +26,85 @@ export default function ProductDetailClient({ product, discountedPrice, averageR
   const [selectedImage, setSelectedImage] = useState(0);
   const [quantity, setQuantity] = useState(1);
   const [selectedColor, setSelectedColor] = useState(0);
-  const [selectedSize, setSelectedSize] = useState("M");
+  const [selectedSize, setSelectedSize] = useState("");
   const [wishlisted, setWishlisted] = useState(false);
+
+  const variantSizes = Array.from(
+    new Set(
+      (product.variants || [])
+        .map((v: { size?: string | null }) => (v.size || "").trim())
+        .filter(Boolean)
+    )
+  );
+  const hasVariantSizes = variantSizes.length > 0;
+  const displayedSizes = hasVariantSizes ? variantSizes : SIZES;
+  const selectedVariant = hasVariantSizes
+    ? (product.variants || []).find((v: { size?: string | null; stock?: number }) => (v.size || "").trim() === selectedSize)
+    : null;
+
+  // If seller set product-level shipping, show it directly; otherwise fetch from rules
+  const productShippingCost: number | null = product.shippingCost ?? null;
+  const [shippingLabel, setShippingLabel] = useState<string>("Calculated at checkout");
+
+  useEffect(() => {
+    // If product has its own shipping cost, use it directly
+    if (productShippingCost !== null && productShippingCost >= 0) {
+      setShippingLabel(`৳${productShippingCost}`);
+      return;
+    }
+
+    // Otherwise: check seller's category shipping rules
+    const BASE = process.env.NEXT_PUBLIC_BASE_API_URL || "http://localhost:5000/api/v1";
+    const sellerEmail: string | undefined = product.sellerEmail || product.seller?.email;
+
+    if (sellerEmail) {
+      fetch(`${BASE}/seller-shipping/public/${encodeURIComponent(sellerEmail)}`)
+        .then((r) => r.json())
+        .then((d) => {
+          if (!d.success || !Array.isArray(d.data) || d.data.length === 0) {
+            // Fall back to global config
+            return fetchGlobalShipping(BASE);
+          }
+          const rules: { categoryId: string | null; charge: number; category?: { name: string } | null }[] = d.data;
+          // Find category-specific rule first, then seller default
+          const catRule = rules.find((r) => r.categoryId && r.categoryId === product.categoryId);
+          const defaultRule = rules.find((r) => r.categoryId === null);
+          const matched = catRule ?? defaultRule;
+          if (matched) {
+            const scope = matched.categoryId ? (matched.category?.name ?? "category") : "all categories";
+            setShippingLabel(`৳${matched.charge} (${scope})`);
+          } else {
+            fetchGlobalShipping(BASE);
+          }
+        })
+        .catch(() => fetchGlobalShipping(BASE));
+    } else {
+      fetchGlobalShipping(BASE);
+    }
+
+    function fetchGlobalShipping(base: string) {
+      fetch(`${base}/site-config/public/shipping_rules`)
+        .then((r) => r.json())
+        .then((d) => {
+          if (!d.success) return;
+          const rules: { state?: string; city?: string; country?: string; charge: number; priority: number }[] =
+            JSON.parse(typeof d.data?.value === "string" ? d.data.value : JSON.stringify(d.data?.value ?? []));
+          if (!Array.isArray(rules) || rules.length === 0) return;
+          const sorted = [...rules].sort((a, b) => (b.priority ?? 0) - (a.priority ?? 0));
+          const named = sorted.filter((r) => r.state || r.city || r.country);
+          const fallback = sorted.find((r) => !r.state && !r.city && !r.country);
+          const parts: string[] = named.map((r) => {
+            const loc = r.city || r.state || r.country || "";
+            return `৳${r.charge} (${loc})`;
+          });
+          if (fallback) parts.push(`৳${fallback.charge} (others)`);
+          if (parts.length > 0) setShippingLabel(parts.join(" · "));
+        })
+        .catch(() => {});
+    }
+  }, [productShippingCost, product.categoryId, product.sellerEmail, product.seller?.email]);
   const { items, addItem } = useCartStore();
-  const existingItem = items.find(item => item.id === product.id);
+  const existingItem = items.find(item => item.productId === product.id);
   const currentQuantity = existingItem ? existingItem.quantity : 0;
   const isOutOfStock = !product.stock || product.stock <= 0;
   const isMaxReached = currentQuantity >= 5;
@@ -38,8 +113,17 @@ export default function ProductDetailClient({ product, discountedPrice, averageR
   const images = product.images?.length > 0 ? product.images : Array(4).fill(null);
 
   const handleAddToCart = () => {
+    if (hasVariantSizes && !selectedSize) {
+      toast.error("Please select a size before adding to cart");
+      return;
+    }
+
     // Check stock
-    if (!product.stock || product.stock < quantity) {
+    const availableStock = hasVariantSizes
+      ? Number(selectedVariant?.stock || 0)
+      : Number(product.stock || 0);
+
+    if (!availableStock || availableStock < quantity) {
       toast.error("Insufficient stock for this item");
       return;
     }
@@ -58,10 +142,12 @@ export default function ProductDetailClient({ product, discountedPrice, averageR
     addItem(
       {
         id: product.id,
+        productId: product.id,
         name: product.name,
         price: discountedPrice ?? product.price,
         image: product.images?.[0] || "",
         category: product.category?.name || "Uncategorized",
+        size: selectedSize || undefined,
       },
       quantity
     );
@@ -156,11 +242,13 @@ export default function ProductDetailClient({ product, discountedPrice, averageR
         {/* Size */}
         <div className="mb-7">
           <div className="flex items-center justify-between mb-3">
-            <p className="text-xs font-bold uppercase tracking-widest text-zinc-400">Select Size</p>
+            <p className="text-xs font-bold uppercase tracking-widest text-zinc-400">
+              Select Size {hasVariantSizes ? <span className="text-red-500">*</span> : null}
+            </p>
             <button className="text-xs font-semibold text-indigo-600 hover:underline">Size Guide</button>
           </div>
           <div className="flex gap-3">
-            {SIZES.map((size) => (
+            {displayedSizes.map((size) => (
               <button key={size} onClick={() => setSelectedSize(size)}
                 className={`w-12 h-12 rounded-xl text-sm font-bold border-2 transition-all hover:border-indigo-600 ${selectedSize === size ? "bg-indigo-600 text-white border-indigo-600" : "border-zinc-200 text-zinc-700 hover:text-indigo-600"}`}
               >
@@ -168,6 +256,9 @@ export default function ProductDetailClient({ product, discountedPrice, averageR
               </button>
             ))}
           </div>
+          {hasVariantSizes && !selectedSize && (
+            <p className="mt-2 text-xs font-medium text-red-500">Size selection is required for this product.</p>
+          )}
         </div>
 
         {/* Quantity + Add to Cart */}
@@ -181,7 +272,8 @@ export default function ProductDetailClient({ product, discountedPrice, averageR
               const { items } = useCartStore.getState();
               const existingItem = items.find(item => item.id === product.id);
               const currentQuantity = existingItem ? existingItem.quantity : 0;
-              const maxAllowed = Math.min(product.stock || 99, 5 - currentQuantity);
+              const selectedStock = hasVariantSizes ? Number(selectedVariant?.stock || 0) : Number(product.stock || 0);
+              const maxAllowed = Math.min(selectedStock || 99, 5 - currentQuantity);
               setQuantity(Math.min(maxAllowed, quantity + 1));
             }} className="w-12 h-full flex items-center justify-center hover:bg-zinc-50 text-zinc-600 transition-colors">
               <Plus className="w-4 h-4" />
@@ -207,7 +299,7 @@ export default function ProductDetailClient({ product, discountedPrice, averageR
         <div className="space-y-3 pt-6 border-t border-zinc-100">
           <div className="flex items-start gap-3 text-sm">
             <Truck className="w-5 h-5 text-indigo-600 shrink-0 mt-0.5" />
-            <p><span className="font-semibold">Free Express Shipping</span><span className="text-zinc-500"> — Estimated delivery: 2–4 business days.</span></p>
+            <p><span className="font-semibold">Shipping: {shippingLabel}</span><span className="text-zinc-500"> — Estimated delivery: 2–4 business days.</span></p>
           </div>
           <div className="flex items-start gap-3 text-sm">
             <RefreshCcw className="w-5 h-5 text-indigo-600 shrink-0 mt-0.5" />

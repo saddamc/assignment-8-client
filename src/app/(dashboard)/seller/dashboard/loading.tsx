@@ -3,17 +3,17 @@ import { Skeleton } from "@/components/ui/skeleton";
 export default function SellerDashboardLoading() {
   return (
     <div className="space-y-8 lg:space-y-10">
-      <div className="rounded-4xl border border-slate-200 bg-slate-950 px-6 py-7 shadow-sm sm:px-8 lg:px-10 lg:py-9">
+      <div className="rounded-4xl border border-slate-200 bg-white px-6 py-7 shadow-sm sm:px-8 lg:px-10 lg:py-9">
         <div className="grid gap-6 lg:grid-cols-[1.35fr_0.65fr] lg:items-end">
           <div className="space-y-5">
-            <Skeleton className="h-7 w-40 rounded-full bg-white/10" />
+            <Skeleton className="h-7 w-40 rounded-full bg-slate-100" />
             <div className="space-y-3">
-              <Skeleton className="h-11 w-full max-w-2xl bg-white/10" />
-              <Skeleton className="h-5 w-full max-w-xl bg-white/10" />
+              <Skeleton className="h-11 w-full max-w-2xl bg-slate-100" />
+              <Skeleton className="h-5 w-full max-w-xl bg-slate-100" />
             </div>
             <div className="flex gap-3">
-              <Skeleton className="h-12 w-40 rounded-2xl bg-white/10" />
-              <Skeleton className="h-12 w-36 rounded-2xl bg-white/10" />
+              <Skeleton className="h-12 w-40 rounded-2xl bg-slate-100" />
+              <Skeleton className="h-12 w-36 rounded-2xl bg-slate-100" />
             </div>
           </div>
 

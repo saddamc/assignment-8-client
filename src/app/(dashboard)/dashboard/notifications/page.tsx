@@ -40,7 +40,10 @@ export default function NotificationsPage() {
     } catch { /* empty */ }
   };
 
-  useEffect(() => { fetchNotifications(); }, []);
+  useEffect(() => {
+    const load = async () => { await fetchNotifications(); };
+    load();
+  }, []);
 
   const unread = notifications.filter((n) => !n.isRead).length;
 

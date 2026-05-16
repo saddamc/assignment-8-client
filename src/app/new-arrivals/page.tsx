@@ -7,6 +7,7 @@ import { ArrowRight } from "lucide-react";
 
 interface Product {
   id: string;
+  slug?: string;
   name: string;
   price: number;
   discount?: number;
@@ -58,7 +59,7 @@ export default async function NewArrivalsPage() {
                       : null;
 
                   return (
-                    <Link key={product.id} href={`/products/${product.id}`} className="group flex flex-col">
+                    <Link key={product.id} href={`/products/${product.slug || product.id}`} className="group flex flex-col">
                       <div className="relative aspect-4/5 bg-zinc-100 rounded-3xl overflow-hidden mb-4">
                         {product.images?.[0] ? (
                           <Image

@@ -48,7 +48,10 @@ export default function AdminCategoriesPage() {
     }
   };
 
-  useEffect(() => { fetchCategories(); }, []);
+  useEffect(() => {
+    const load = async () => { await fetchCategories(); };
+    load();
+  }, []);
 
   const handleCreate = (e: React.FormEvent) => {
     e.preventDefault();

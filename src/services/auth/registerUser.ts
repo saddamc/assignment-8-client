@@ -86,4 +86,4 @@ export const registerUser = async (_currentState: any, formData: FormData): Prom
     }
 };
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
+ 

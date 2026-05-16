@@ -92,9 +92,12 @@ export default function CartPage() {
                                             <div className="flex justify-between items-start mb-1">
                                                 <div>
                                                     <p className="text-xs font-semibold text-primary uppercase mb-0.5">{item.category}</p>
-                                                    <Link href={`/products/${item.id}`} className="font-semibold text-base hover:text-primary transition-colors">
+                                                    <Link href={`/products/${item.slug || item.id}`} className="font-semibold text-base hover:text-primary transition-colors">
                                                         {item.name}
                                                     </Link>
+                                                    {item.size && (
+                                                        <p className="text-xs text-muted-foreground mt-0.5">Size: {item.size}</p>
+                                                    )}
                                                 </div>
                                                 <div className="text-right ml-4 shrink-0">
                                                     <p className="text-xs text-muted-foreground">${item.price.toFixed(2)} each</p>

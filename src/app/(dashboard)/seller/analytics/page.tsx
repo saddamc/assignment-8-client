@@ -5,7 +5,7 @@ import SellerAnalyticsClient from "./SellerAnalyticsClient";
 type Analytics = any;
 
 const MOCK: Analytics = {
-  overview: { totalRevenue: 12450, totalOrders: 142, totalProducts: 38, pendingOrders: 14 },
+  overview: { totalRevenue: 0, totalOrders: 0, totalProducts: 0, pendingOrders: 0 },
   revenueChart: [
     { month: "Jan", revenue: 1800 },
     { month: "Feb", revenue: 2400 },
