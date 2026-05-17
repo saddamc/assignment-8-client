@@ -29,8 +29,8 @@ export default function ProductDetailClient({ product, discountedPrice, averageR
   const [selectedSize, setSelectedSize] = useState("");
   const [wishlisted, setWishlisted] = useState(false);
 
-  const variantSizes = Array.from(
-    new Set(
+  const variantSizes: string[] = Array.from(
+    new Set<string>(
       (product.variants || [])
         .map((v: { size?: string | null }) => (v.size || "").trim())
         .filter(Boolean)

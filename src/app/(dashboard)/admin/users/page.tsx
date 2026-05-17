@@ -94,12 +94,14 @@ export default async function AdminUsersPage({
                   const name =
                     user.customer?.name ||
                     user.seller?.name ||
+                    user.admin?.name ||
                     user.name ||
                     "Unknown";
                   const email =
                     user.email ||
                     user.customer?.email ||
                     user.seller?.email ||
+                    user.admin?.email ||
                     "";
 
                   return (

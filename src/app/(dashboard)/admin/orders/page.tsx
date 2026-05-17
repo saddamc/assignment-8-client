@@ -67,16 +67,16 @@ export default function AdminOrdersPage() {
 
     async function fetchOrders() {
         try {
-            const filters: Record<string, unknown> = {};
-            if (statusFilter) filters.status = statusFilter;
-            if (paymentFilter) filters.paymentStatus = paymentFilter;
+            const queryParams = new URLSearchParams();
+            if (statusFilter) queryParams.append("status", statusFilter);
+            if (paymentFilter) queryParams.append("paymentStatus", paymentFilter);
 
-            const res = await clientFetch("/orders", {
+            const res = await clientFetch(`/orders?${queryParams.toString()}`, {
                 method: "GET",
             });
             const data = await res.json();
             if (data.success) {
-                setOrders(data.data.data || []);
+                setOrders(data.data || []);
             }
         } catch (error) {
             toast.error("Failed to fetch orders");

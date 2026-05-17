@@ -27,7 +27,7 @@ export default async function AdminTransactionsPage({
     const data = await res.json();
     if (data.success) {
       payments = data.data?.data || data.data || [];
-      total = data.data?.meta?.total || payments.length;
+      total = data.meta?.total || data.data?.meta?.total || payments.length;
     }
   } catch { /* empty state */ }
 

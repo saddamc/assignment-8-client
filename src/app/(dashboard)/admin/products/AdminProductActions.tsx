@@ -22,6 +22,7 @@ export default function AdminProductActions({ productId, productStatus }: Props)
 
   const isPending = productStatus === "PENDING";
   const isPublished = productStatus === "PUBLISHED";
+  const canApprove = productStatus === "PENDING" || productStatus === "DISABLED" || productStatus === "REJECTED";
 
   const close = () => {
     setOpen(false);
@@ -140,8 +141,8 @@ export default function AdminProductActions({ productId, productStatus }: Props)
 
             {/* Actions */}
             <div className="space-y-2">
-              {/* APPROVE — only for PENDING */}
-              {isPending && activeAction !== "reject" && (
+              {/* APPROVE — only for PENDING, DISABLED, REJECTED */}
+              {canApprove && activeAction !== "reject" && (
                 <button
                   onClick={approve}
                   disabled={loading === "approve"}
